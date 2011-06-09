@@ -2,8 +2,8 @@
 r_feature::r_feature(vector<Ekg_Data> input )
 {
     sigInfo = FalseDetection(input);
-    maxHBR = 206.3 - 0.711 * input[0].age;
-    maxABR = 120 + maxHBR;
+    //maxHBR = 206.3 - 0.711 * input[0].age;
+    //maxABR = 120 + maxHBR;
     pr = vector<int> (sigInfo.size());
     R2R = vector<int> (sigInfo.size());
     Q2T = vector<int> (sigInfo.size());
