@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="warning">Image/Alert.png</file>
+        <file alias="icon">Image/icon.png</file>
+    </qresource>
+</RCC>
