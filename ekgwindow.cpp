@@ -67,7 +67,11 @@ vector<QString> EKGWindow::getFiles(char *patch)
         }
         else
         {
-            bufferList[i].resize(bufferList[i].size() - 4);
+            QString path = patch;
+            path += "/";
+            path += bufferList[i];
+            QFileInfo dizFile(path);
+            bufferList[i] = dizFile.baseName();
         }
     }
     sort(bufferList.begin(),bufferList.end());
@@ -1024,9 +1028,6 @@ void EKGWindow::WekaDo()
     }
     fileProgress->setValue(100);
 }
-
-
-
 
 
 
