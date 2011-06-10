@@ -235,13 +235,4 @@ double r_feature::make_normal(vector<int> data)
     normal_data = enheraf/mean ;
         return normal_data;
 }
-void wekaWriter::writefeature(vector<double> rfeature)
-{
-    QString name("power.txt");
-    QFile file(name);
-    file.open(QIODevice::WriteOnly | QIODevice::Text);
-    QTextStream fstream(&file);
-    for (int i = 0 ; i<rfeature.size() ; i++)
-    fstream<<rfeature[i]<<endl;
-    file.close();
-}
+
