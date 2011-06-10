@@ -17,17 +17,17 @@ struct EKG_atr
 };
 struct normal_data
 {
-    vector<double> P_amp;
-    vector<double> Q_amp;
-    vector<double> R_amp;
-    vector<double> S_amp;
-    vector<double>T_amp;
-    vector<double> QT_interval;
-    vector<double> PR_interval;
-    vector<double> QRScomplex_interval;
-    vector<double> EKGpower;
-    vector<double> Heart_beat_ven;
-    vector<double> RR_interval;
+    double P_amp;
+    double Q_amp;
+    double R_amp;
+    double S_amp;
+    double T_amp;
+    double QT_interval;
+    double PR_interval;
+    double QRScomplex_interval;
+    double EKGpower;
+    double Heart_beat_ven;
+    double RR_interval;
 
 };
 
@@ -38,9 +38,10 @@ public:
     EKG_atr getFueture();
     weka_data getWeka();
 private:
+    void writefeature(vector<double> feature);
     normal_data normaldata;
-    vector <double> make_normal(vector <double> data);
-    vector <double> make_normal(vector<int> data);
+    double make_normal(vector <double> data);
+    double make_normal(vector<int> data);
     EKG_atr atrribute;
     void set_atr();
     void f_avr_rate();

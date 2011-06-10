@@ -2,8 +2,8 @@
 r_feature::r_feature(vector<Ekg_Data> input )
 {
     sigInfo = FalseDetection(input);
-    //maxHBR = 206.3 - 0.711 * input[0].age;
-    //maxABR = 120 + maxHBR;
+    maxHBR = 206.3 - 0.711 * input[0].age;
+    maxABR = 120 + maxHBR;
     pr = vector<int> (sigInfo.size());
     R2R = vector<int> (sigInfo.size());
     Q2T = vector<int> (sigInfo.size());
@@ -55,6 +55,7 @@ r_feature::r_feature(vector<Ekg_Data> input )
         else
             Q2T[i] = NOTDETECTED;
     }
+    ekgPower = FalseDetection(ekgPower);
     pr = FalseDetection(pr);
     R2R = FalseDetection(R2R);
       Q2T = FalseDetection(Q2T);
@@ -192,11 +193,12 @@ vector<int> r_feature::FalseDetection(vector<int> fbuffer)
 weka_data r_feature::getWeka()
 {
     weka_data temp;
-    temp.PR = Miangin(normaldata.PR_interval);
-    temp.Q2T = Miangin(normaldata.QT_interval);
-    temp.QRS = Miangin(normaldata.QRScomplex_interval);
-    temp.Ramp = Miangin(normaldata.R_amp);
-    temp.rate = Miangin(normaldata.Heart_beat_ven);
+    temp.PR = normaldata.PR_interval;
+    temp.Q2T = normaldata.QT_interval;
+    temp.QRS = normaldata.QRScomplex_interval;
+    temp.Ramp = normaldata.R_amp;
+    temp.rate = normaldata.Heart_beat_ven;
+    temp.EKGpower = normaldata.EKGpower;
     temp.disease = "not";
     return temp;
 }
@@ -217,27 +219,29 @@ EKG_atr r_feature::getFueture()
 {
     return atrribute;
 }
-vector <double> r_feature::make_normal(vector<double> data)
+double r_feature::make_normal(vector<double> data)
 {
     double mean = Miangin(data);
-    vector <double> normal_data (data.size());
+    double normal_data;
     double enheraf = sqrt(getVariance(data));
-    for (int i=0 ; i<data.size() ; i++)
-    {
-        normal_data.push_back((fabs(data[i] - mean ))/enheraf);
-    }
+    normal_data = enheraf/mean ;
         return normal_data;
 }
-vector <double> r_feature::make_normal(vector<int> data)
+double r_feature::make_normal(vector<int> data)
 {
     double mean = Miangin(data);
-    vector <double> normal_data (data.size());
+    double normal_data;
     double enheraf = sqrt(getVariance(data));
-    for (int i=0 ; i<data.size() ; i++)
-    {
-        normal_data.push_back((fabs(data[i] - mean ))/enheraf);
-        if (normal_data[i] > 1.0)
-            normal_data[i] = 1;
-    }
+    normal_data = enheraf/mean ;
         return normal_data;
+}
+void wekaWriter::writefeature(vector<double> rfeature)
+{
+    QString name("power.txt");
+    QFile file(name);
+    file.open(QIODevice::WriteOnly | QIODevice::Text);
+    QTextStream fstream(&file);
+    for (int i = 0 ; i<rfeature.size() ; i++)
+    fstream<<rfeature[i]<<endl;
+    file.close();
 }
