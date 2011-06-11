@@ -22,7 +22,7 @@ SigDetect::SigDetect(vector<double> signal , bool getPlot , QwtPlot *plotwidget 
         return ;
 //Make On base
     ZeroLine();
-    //ZeroShib();
+    ZeroShib();
     MainSig = buffer;
 //Find R;
     bool HaveR = findR(),HaveP=true;
@@ -36,7 +36,8 @@ SigDetect::SigDetect(vector<double> signal , bool getPlot , QwtPlot *plotwidget 
     {
         findQS();
     }
-    MK_QRS_Zero();
+
+    MK_QRS_Zero(DETECTED);
     ZeroLine();
     //MK_First_Zero();
     double PT = 3.0 / 8.0;
@@ -46,6 +47,7 @@ SigDetect::SigDetect(vector<double> signal , bool getPlot , QwtPlot *plotwidget 
     gussian(5);
     ZeroLine();
     setDetect(BDetected);
+
     if (MAX() > PT * buffer.size())
     {
         //while(HaveP)
@@ -73,6 +75,9 @@ SigDetect::SigDetect(vector<double> signal , bool getPlot , QwtPlot *plotwidget 
             }
         }
     }
+
+    MK_QRS_Zero(0);
+
 //Copy to double array
     if(getPlot)
     {
@@ -361,6 +366,18 @@ bool SigDetect::findR()
         mMax = 2;
     int i = mMax -1 ;
     bool haveDelta;
+    //If have false QS detection
+    if(buffer[mMax] < 0)
+    {
+        int qs = mMax;
+        int rGuess = MAX();
+        int tafavot = buffer[rGuess] - buffer[qs];
+        if (tafavot > 90)
+        {
+            mMax = rGuess;
+        }
+    }
+    //END false QS detection
     if(MainSig[mMax]>=MainSig[mMax-1] && MainSig[mMax] >= MainSig[mMax-2] && MainSig[mMax] >= MainSig[mMax+1] && MainSig[mMax] >= MainSig[mMax+2])
     {
         while(i < buffer.size() -1)
@@ -390,7 +407,7 @@ bool SigDetect::findR()
             }
             else
             {
-                if (buffer [i] > 0)
+                if (buffer[i] > 0)
                 {
                     haveDelta = true;
                 }
@@ -532,7 +549,7 @@ void SigDetect::findS()
     int k = 0 , mMax = -1;
     for(k = sigInfo.r.detect ; k < MainSig.size() - 2; k++)
     {
-        if(MainSig[k] < MainSig[k+1] &&  MainSig[k] < 0)
+        if(MainSig[k] < MainSig[k+1] && MainSig[k] < MainSig[k+2] &&  MainSig[k] < 0)
         {
             mMax = k;
             break;
@@ -725,16 +742,16 @@ bool SigDetect::findT()
     //If Detected T is false this code run!
     return false;
 }
-void SigDetect::MK_QRS_Zero()
+void SigDetect::MK_QRS_Zero(int replace)
 {
-    int M = sigInfo.q.detect;
+    int M = sigInfo.q.start;
     if (M == NOTDETECTED)
     {
-        M = sigInfo.qs.detect;
+        M = sigInfo.qs.start;
     }
     for (int i = M;  i < buffer.size() ; i++ )
     {
-        buffer[i] = DETECTED;
+        buffer[i] = replace;
     }
 }
 void SigDetect::MK_First_Zero()

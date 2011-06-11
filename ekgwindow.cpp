@@ -1,199 +1,6 @@
 #include "ekgwindow.h"
 #include "inputs.h"	/* list of records to analyze and definitions of ECG_DB_PATH and REC_COUNT */
 
-void EKGWindow::setDB_Path()
-{
-    bool ok;
-    QString buffer = QInputDialog::getText(this,"DataBase Set Path","DataBase Path", QLineEdit::Normal,DB_Path, &ok);
-    if (ok && !buffer.isEmpty())
-        DB_Path = buffer;
-}
-void EKGWindow::setRecordNum()
-{
-//! [0]
-    bool ok;
-    QString buffer = QInputDialog::getText(this,"set Record Number","Record Number", QLineEdit::Normal,SigRecord, &ok);
-    if (ok)
-        SigRecord = buffer;
-//! [0]
-}
-void EKGWindow::setSigTime()
-{
-//! [0]
-    bool ok;
-    int i = QInputDialog::getInt(this, "Set Signal Time",
-                                 "Time", SigTime, 0, 100000, 1, &ok);
-    if (ok)
-        SigTime = i;
-}
-void EKGWindow::setAge()
-{
-//! [0]
-    bool ok;
-    int i = QInputDialog::getInt(this, "Set EKG Age",
-                                 "Age", EKG_age, 0, 150, 1, &ok);
-    if (ok)
-        EKG_age = i;
-}
-void EKGWindow::OpenError(char *recornNum)
-{
-    QString strm="Could not open signal number ";
-    strm+=recornNum;
-    strm+=".";
-    strm+="\nNo such signal in database. ";
-    Wraning(strm);
-}
-vector<QString> EKGWindow::getFiles(char *patch)
-{
-    vector<QString> bufferList = vector<QString>(0);
-    DIR *dp;
-    struct dirent *dirp;
-    dp  = opendir(patch);
-    if (dp != NULL)
-    {
-        while (dirp = readdir (dp))
-            bufferList.push_back(QString(dirp->d_name));
-        closedir (dp);
-    }
-    else
-      perror ("Couldn't open the directory");
-    //Filter Data
-    for (int i = 0 ; i < bufferList.size();i++)
-    {
-        if (bufferList[i].size()<=3)
-        {
-            bufferList.erase(bufferList.begin()+i);
-            i--;
-        }
-        else
-        {
-            QString path = patch;
-            path += "/";
-            path += bufferList[i];
-            QFileInfo dizFile(path);
-            bufferList[i] = dizFile.baseName();
-        }
-    }
-    sort(bufferList.begin(),bufferList.end());
-    //Remove Same Name
-    for (int i = 0 ; i < bufferList.size();i++)
-    {
-         if (bufferList[i] == bufferList[i+1])
-         {
-                bufferList.erase(bufferList.begin()+i);
-                i--;
-        }
-    }
-    return bufferList;
-}
-vector<QString> EKGWindow::getUnDiz(char *patch, vector<QString> values)
-{
-    for(int i =0 ; i < values.size();i++)
-    {
-        diseaWriter bufferd(patch,values[i].toStdString().c_str());
-        if (bufferd.isExist())
-        {
-            values.erase(values.begin()+i);
-            i--;
-        }
-    }
-    return values;
-}
-QString EKGWindow::askDiz(const char* recornNum)
-{
-
-//! [0]
-    QString title =QString("Set Disease ID of record ");
-    QString Label = "Disease name:";
-    QString DiseaseName;
-    title += recornNum;
-    bool ok;
-    if(disList.isExist())
-    {
-        vector<QString> dizList = disList.getList();
-        QStringList items;
-        for (int i = 0 ; i < dizList.size();i++)
-            items << dizList[i];
-        DiseaseName = QInputDialog::getItem(this, title,Label, items, 0, false, &ok);
-        if (!ok)
-            DiseaseName = "";
-    }
-    else
-        Wraning("\nYou doesn't create a disease list\nfor do this go to EKG menu and click on \"Add Desase\"");
-    return DiseaseName;
-}
-int EKGWindow::askComplex(int end)
-{
-//! [0]
-    QString buffer =QString("Complex Number To Intercept");
-    bool ok;
-    int i = QInputDialog::getInt(this, buffer,
-                                 buffer, 15, 0, end, 1, &ok);
-    if (ok)
-        return i;
-    else
-        return -1;
-}
-void EKGWindow::Wraning(QString text)
-{
-    QString title = "Warning";
-    QMessageBox *warnWindow = new QMessageBox(QMessageBox::Warning,title,text);
-    warnWindow->setIconPixmap(QPixmap(":/warning"));
-    warnWindow->setWindowIcon(QIcon(":/warning"));
-    warnWindow->show();
-}
-void EKGWindow::addDisease()
-{
-    bool ok;
-    QString title = "Add Disease";
-    QString Label = "Disease name:";
-    QString DiseaseName = QInputDialog::getText(this, title,Label, QLineEdit::Normal, QString(), &ok);
-    if (ok)
-        disList.addItem(DiseaseName);
-}
-void EKGWindow::setDisease()
-{
-    bool ok;
-    QString title = "Set Disease";
-    QString Label = "Disease name:";
-    if(disList.isExist())
-    {
-        vector<QString> dizList = disList.getList();
-        QStringList items;
-        for (int i = 0 ; i < dizList.size();i++)
-            items << dizList[i];
-        QString item = QInputDialog::getItem(this, title,Label, items, 0, false, &ok);
-    }
-    else
-        Wraning("\nYou doesn't create a disease list\nfor do this go to EKG menu and click on \"Add Desase\"");
-}
-QStringList EKGWindow::AddRecordFile(QString patch)
-{
-    QDir dbFinder(patch);
-    QString title = "Add EKG File";
-    QFileDialog::Options options;
-    QString selectedFilter;
-    QStringList files = QFileDialog::getOpenFileNames(this, title,dbFinder.absolutePath(),
-                                "EKG Files (*.diz)",&selectedFilter,options);
-    for (int i = 0 ; i < files.count();i++)
-    {
-        QFileInfo filterFile(files[i]);
-        files[i] = filterFile.baseName();
-    }
-    return files;
-}
-void EKGWindow::createInfo(QString name , int value)
-{
-    QString valueBuffer;
-    valueBuffer.setNum(value);
-    Feuture_Layout = new QHBoxLayout;
-    fLabel = new QLabel(name);
-    fWidget = new QGroupBox;
-    Feuture_Layout->addWidget(fLabel);
-    fLabel = new QLabel(valueBuffer);
-    Feuture_Layout->addWidget(fLabel);
-    fWidget->setLayout(Feuture_Layout);
-}
 /*--------------------------------------------------------------------------------------------
 |                                         PLOT                                               |
 ---------------------------------------------------------------------------------------------*/
@@ -421,6 +228,10 @@ EKGWindow::EKGWindow(QWidget *parent) :QMainWindow(parent)
     A_SetTime = SigMenu->addAction("Signal Time");
     A_SetDB = SigMenu->addAction("Database Path");
     A_SetRecord = SigMenu->addAction("Record Number");
+    B_AskComplex = SigMenu->addAction("Ask Complex Number");
+
+    B_AskComplex->setCheckable(true);
+    B_AskComplex->setChecked(true);
     //Ekg Menu
     QMenu *EKGMenu = menu->addMenu("EKG");
     QAction *A_addDiz = EKGMenu->addAction("Add Disease");
@@ -458,10 +269,16 @@ EKGWindow::EKGWindow(QWidget *parent) :QMainWindow(parent)
 
     zoomer = new QwtPlotZoomer(myPlot->canvas());
     zoomer->setMousePattern(QwtEventPattern::MouseSelect3,Qt::RightButton);
+
+    //Button
+    TimeButton = new GButton(GButton::Blue,"Set Time");
+    RecordButton = new GButton(GButton::Red,"Set Record");
+    DBButton = new GButton(GButton::Orenge,"Set Database");
+
     //Create Layout
     CreateLayout(true);
     //Make center
-    setGeometry(0,0,1000,500);
+    resize(WIDTH,HEIGHT);
     QRect available_geom = QDesktopWidget().availableGeometry();
     QRect current_geom = frameGeometry();
     setGeometry(available_geom.width() / 2 - current_geom.width() / 2,
@@ -472,8 +289,10 @@ EKGWindow::EKGWindow(QWidget *parent) :QMainWindow(parent)
     //Signal and slot connect
     connect(A_Quit,SIGNAL(triggered(bool)),this,SLOT(close()));
     connect(A_SetDB,SIGNAL(triggered(bool)),this,SLOT(setDB_Path()));
+    connect(DBButton,SIGNAL(click()),this,SLOT(setDB_Path()));
     connect(A_Save,SIGNAL(triggered(bool)),this,SLOT(A_Weka_Save()));
     connect(A_Start,SIGNAL(triggered(bool)),this,SLOT(Detection_Click()));
+    connect(startButton,SIGNAL(click()),this,SLOT(Detection_Click()));
     connect(A_Plot_show,SIGNAL(triggered(bool)),this,SLOT(A_Plot_change()));
     connect(A_Det_signal,SIGNAL(triggered(bool)),this,SLOT(A_Det_change()));
     connect(A_Ekg_signal,SIGNAL(triggered(bool)),this,SLOT(A_Sig_change()));
@@ -483,6 +302,8 @@ EKGWindow::EKGWindow(QWidget *parent) :QMainWindow(parent)
     connect(A_DiseaseMode,SIGNAL(triggered(bool)),this,SLOT(A_DiseaseMode_change()));
     connect(A_SetRecord,SIGNAL(triggered(bool)),this,SLOT(setRecordNum()));
     connect(A_SetTime,SIGNAL(triggered(bool)),this,SLOT(setSigTime()));
+    connect(RecordButton,SIGNAL(click()),this,SLOT(setRecordNum()));
+    connect(TimeButton,SIGNAL(click()),this,SLOT(setSigTime()));
     connect(A_setAge,SIGNAL(triggered(bool)),this,SLOT(setAge()));
     connect(A_addDiz,SIGNAL(triggered(bool)),this,SLOT(addDisease()));
     connect(A_setDiz,SIGNAL(triggered(bool)),this,SLOT(setDisease()));
@@ -542,7 +363,7 @@ void EKGWindow::A_InterMode_change()
     if (A_InterMode->isChecked())
     {
         //Change Size
-        setGeometry(0,0,1000,500);
+        resize(WIDTH,HEIGHT);
         QRect available_geom = QDesktopWidget().availableGeometry();
         QRect current_geom = frameGeometry();
         setGeometry(available_geom.width() / 2 - current_geom.width() / 2,
@@ -556,14 +377,17 @@ void EKGWindow::A_InterMode_change()
         A_WekaMode->setChecked(true);
     }
     CreateLayout(true);
+    resize(WIDTH,HEIGHT);
 }
 void EKGWindow::A_DiseaseMode_change()
 {
     mode = 2;
+    resize(600,400);
+    CreateLayout(true);
     if (A_DiseaseMode->isChecked())
     {
         //Change Size
-        setGeometry(0,0,600,400);
+        resize(600,400);
         QRect available_geom = QDesktopWidget().availableGeometry();
         QRect current_geom = frameGeometry();
         setGeometry(available_geom.width() / 2 - current_geom.width() / 2,
@@ -576,15 +400,16 @@ void EKGWindow::A_DiseaseMode_change()
     {
         A_InterMode->setChecked(true);
     }
-    CreateLayout(true);
 }
 void EKGWindow::A_WekaMode_change()
 {
     mode = 3;
+    resize(600,450);
+    CreateLayout(true);
     if (A_WekaMode->isChecked())
     {
         //Change Size
-        setGeometry(0,0,600,450);
+        resize(600,450);
         QRect available_geom = QDesktopWidget().availableGeometry();
         QRect current_geom = frameGeometry();
         setGeometry(available_geom.width() / 2 - current_geom.width() / 2,
@@ -597,7 +422,6 @@ void EKGWindow::A_WekaMode_change()
     {
         A_InterMode->setChecked(true);
     }
-    CreateLayout(true);
 }
 void EKGWindow::A_Weka_Save()
 {
@@ -610,9 +434,9 @@ void EKGWindow::CreateLayout(bool newplot)
     filePL = new QLabel("File Progress:");
     dbPL = new QLabel("All Progress :");
     Main_Widget = new QWidget;
-    Main_Layout = new QHBoxLayout;
+    Main_Layout = new QVBoxLayout;
     Grid_Layout = new QGridLayout;
-    Info_Layout= new QGridLayout;
+    Info_Layout = new QHBoxLayout;
     DBProgress = new QProgressBar;
     fileProgress = new QProgressBar;
     Progress_Layout = new QHBoxLayout;
@@ -632,69 +456,34 @@ void EKGWindow::CreateLayout(bool newplot)
     //---Set Layout---
     if(A_Plot_show->isChecked())
     {
-        Grid_Layout->addWidget(myPlot);
-        //Make Plot widget big
-        //Grid_Layout->setRowStretch(0,100);
+        Main_Layout->addWidget(myPlot,1);
     }
-
     switch(mode)
     {
     case 1:
         {
-            Info_Layout->addWidget(interceptPlot,0,0,1,3);
-            Main_Widget->setLayout(Info_Layout);
-            Main_Layout->addWidget(Main_Widget,1);
+            Info_Layout->addWidget(interceptPlot,1);
             //
             jodaKonnande = new QFrame();
-            jodaKonnande->setFrameShape(QFrame::VLine);
+            jodaKonnande->setFrameShape(QFrame::HLine);
             jodaKonnande->setFrameShadow(QFrame::Raised);
             Main_Layout->addSpacing(5);
             Main_Layout->addWidget(jodaKonnande);
             Main_Layout->addSpacing(5);
             //
-
             QSpacerItem *space = new QSpacerItem(10,10);
             jodaKonnande = new QFrame();
-            jodaKonnande->setFrameShape(QFrame::HLine);
+            jodaKonnande->setFrameShape(QFrame::VLine);
             jodaKonnande->setFrameShadow(QFrame::Sunken);
-            Info_Layout->addItem(space,1,0,1,3);
+            Info_Layout->addItem(space);
             space = new QSpacerItem(10,10);
-            Info_Layout->addWidget(jodaKonnande,2,0,1,3);
-            Info_Layout->addItem(space,3,0,1,3);
-            int i = 12;
-            createInfo("P Amplitude:",localFeature.P_amp);
-            Info_Layout->addWidget(fWidget,i/3,i%3);
-            i++;
-            createInfo("Q Amplitude:",localFeature.Q_amp);
-            Info_Layout->addWidget(fWidget,i/3,i%3);
-            i++;
-            createInfo("R Amplitude:",localFeature.R_amp);
-            Info_Layout->addWidget(fWidget,i/3,i%3);
-            i++;
-            createInfo("S Amplitude:",localFeature.S_amp);
-            Info_Layout->addWidget(fWidget,i/3,i%3);
-            i++;
-            createInfo("T Amplitude:",localFeature.T_amp);
-            Info_Layout->addWidget(fWidget,i/3,i%3);
-            i++;
-            createInfo("QT:",localFeature.QT_interval);
-            Info_Layout->addWidget(fWidget,i/3,i%3);
-            i++;
-            createInfo("PR:",localFeature.PR_interval);
-            Info_Layout->addWidget(fWidget,i/3,i%3);
-            i++;
-            createInfo("QRS Width:",localFeature.QRScomplex_interval);
-            Info_Layout->addWidget(fWidget,i/3,i%3);
-            i++;
-            createInfo("EKGpower:",localFeature.EKGpower);
-            Info_Layout->addWidget(fWidget,i/3,i%3);
-            i++;
-            createInfo("Heart Beat:",localFeature.Heart_beat_ven);
-            Info_Layout->addWidget(fWidget,i/3,i%3);
-            i++;
-            createInfo("RR:",localFeature.RR_interval);
-            Info_Layout->addWidget(fWidget,i/3,i%3);
-            i++;
+            Info_Layout->addWidget(jodaKonnande);
+            Info_Layout->addItem(space);
+            Info_Box();
+            Info_Layout->addWidget(BoxWidget,1);
+            //Add To main
+            Main_Widget->setLayout(Info_Layout);
+            Main_Layout->addWidget(Main_Widget,1);
             break;
         }
     case 2:
@@ -702,6 +491,9 @@ void EKGWindow::CreateLayout(bool newplot)
             Progress_Layout->addWidget(filePL);
             Progress_Layout->addWidget(fileProgress);
             Grid_Layout->addLayout(Progress_Layout, Grid_Layout->rowCount(),0);
+            Main_Widget = new QWidget;
+            Main_Widget->setLayout(Grid_Layout);
+            Main_Layout->addWidget(Main_Widget);
             break;
         }
     case 3:
@@ -713,17 +505,39 @@ void EKGWindow::CreateLayout(bool newplot)
             Progress_Layout->addWidget(dbPL);
             Progress_Layout->addWidget(DBProgress);
             Grid_Layout->addLayout(Progress_Layout, Grid_Layout->rowCount(),0);
+            Main_Widget = new QWidget;
+            Main_Widget->setLayout(Grid_Layout);
+            Main_Layout->addWidget(Main_Widget);
             break;
         }
     }
     //Window
     Main_Widget = new QWidget;
-    Main_Widget->setLayout(Grid_Layout);
-    Main_Layout->addWidget(Main_Widget,2);
-    Main_Widget = new QWidget;
     Main_Widget->setLayout(Main_Layout);
     setCentralWidget(Main_Widget);
     setWindowIcon(QIcon(":/icon"));
+}
+void EKGWindow::createInfo(QString name , int value)
+{
+    QString valueBuffer;
+    valueBuffer.setNum(value);
+    Feuture_Layout = new QHBoxLayout;
+    fLabel = new QLabel(name);
+    fWidget = new QGroupBox;
+    Feuture_Layout->addWidget(fLabel);
+    fLabel = new QLabel(valueBuffer);
+    Feuture_Layout->addWidget(fLabel);
+    fWidget->setLayout(Feuture_Layout);
+}
+void EKGWindow::createInfo(QString name , QString value)
+{
+    Feuture_Layout = new QHBoxLayout;
+    fLabel = new QLabel(name);
+    fWidget = new QGroupBox;
+    Feuture_Layout->addWidget(fLabel);
+    fLabel = new QLabel(value);
+    Feuture_Layout->addWidget(fLabel);
+    fWidget->setLayout(Feuture_Layout);
 }
 /*--------------------------------------------------------------------------------------------
 |                                     Read Signal                                            |
@@ -880,7 +694,10 @@ weka_data EKGWindow::readSignal(WFDB_Siginfo signal_info ,char *record , int tim
     vector<double> Complex;
     if (getIntercept)
     {
-        ComplexID = askComplex(Sig_Arr.size());
+        if (B_AskComplex->isChecked())
+            ComplexID = askComplex(Sig_Arr.size());
+        else
+            ComplexID = 15;
     }
 //-------------Devide Signal And Get Feuture------------
     for (int i = 1 ; i < Sig_Arr.size();i++)
@@ -1028,9 +845,257 @@ void EKGWindow::WekaDo()
     }
     fileProgress->setValue(100);
 }
+void EKGWindow::Info_Box()
+{
+    BoxWidget = new QWidget;
+    QGridLayout *box_layout = new QGridLayout;
+    int i = 0;
+    createInfo("Record Number:",SigRecord);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("Signal Time:",SigTime);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("Patient Age:",EKG_age);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("P Amplitude:",localFeature.P_amp);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("Q Amplitude:",localFeature.Q_amp);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("R Amplitude:",localFeature.R_amp);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("S Amplitude:",localFeature.S_amp);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("T Amplitude:",localFeature.T_amp);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("QT:",localFeature.QT_interval);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("PR:",localFeature.PR_interval);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("QRS Width:",localFeature.QRScomplex_interval);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("EKGpower:",localFeature.EKGpower);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("Heart Beat:",localFeature.Heart_beat_ven);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("RR:",localFeature.RR_interval);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    startButton = new GButton(GButton::Green,"Start");
+    box_layout->addWidget(startButton,i/3,i%3);
+    i++;
 
+    box_layout->addWidget(TimeButton,i/3,i%3);
+    i++;
 
+    box_layout->addWidget(RecordButton,i/3,i%3);
+    i++;
 
+    box_layout->addWidget(DBButton,i/3,i%3);
+    i++;
+
+    box_layout->setVerticalSpacing(5);
+    BoxWidget->setLayout(box_layout);
+}
+/*--------------------------------------------------------------------------------------------
+|                                   Menu And Signal                                          |
+---------------------------------------------------------------------------------------------*/
+void EKGWindow::setDB_Path()
+{
+    bool ok;
+    QString buffer = QInputDialog::getText(this,"DataBase Set Path","DataBase Path", QLineEdit::Normal,DB_Path, &ok);
+    if (ok && !buffer.isEmpty())
+        DB_Path = buffer;
+}
+void EKGWindow::setRecordNum()
+{
+//! [0]
+    bool ok;
+    QString buffer = QInputDialog::getText(this,"set Record Number","Record Number", QLineEdit::Normal,SigRecord, &ok);
+    if (ok)
+    {
+        SigRecord = buffer;
+        if (mode == 1)
+            Detection_Click();
+    }
+//! [0]
+}
+void EKGWindow::setSigTime()
+{
+//! [0]
+    bool ok;
+    int i = QInputDialog::getInt(this, "Set Signal Time",
+                                 "Time", SigTime, 0, 100000, 1, &ok);
+    if (ok)
+        SigTime = i;
+}
+void EKGWindow::setAge()
+{
+//! [0]
+    bool ok;
+    int i = QInputDialog::getInt(this, "Set EKG Age",
+                                 "Age", EKG_age, 0, 150, 1, &ok);
+    if (ok)
+        EKG_age = i;
+}
+void EKGWindow::OpenError(char *recornNum)
+{
+    QString strm="Could not open signal number ";
+    strm+=recornNum;
+    strm+=".";
+    strm+="\nNo such signal in database. ";
+    Wraning(strm);
+}
+vector<QString> EKGWindow::getFiles(char *patch)
+{
+    vector<QString> bufferList = vector<QString>(0);
+    DIR *dp;
+    struct dirent *dirp;
+    dp  = opendir(patch);
+    if (dp != NULL)
+    {
+        while (dirp = readdir (dp))
+            bufferList.push_back(QString(dirp->d_name));
+        closedir (dp);
+    }
+    else
+      perror ("Couldn't open the directory");
+    //Filter Data
+    for (int i = 0 ; i < bufferList.size();i++)
+    {
+        if (bufferList[i].size()<=3)
+        {
+            bufferList.erase(bufferList.begin()+i);
+            i--;
+        }
+        else
+        {
+            QString path = patch;
+            path += "/";
+            path += bufferList[i];
+            QFileInfo dizFile(path);
+            bufferList[i] = dizFile.baseName();
+        }
+    }
+    sort(bufferList.begin(),bufferList.end());
+    //Remove Same Name
+    for (int i = 0 ; i < bufferList.size();i++)
+    {
+         if (bufferList[i] == bufferList[i+1])
+         {
+                bufferList.erase(bufferList.begin()+i);
+                i--;
+        }
+    }
+    return bufferList;
+}
+vector<QString> EKGWindow::getUnDiz(char *patch, vector<QString> values)
+{
+    for(int i =0 ; i < values.size();i++)
+    {
+        diseaWriter bufferd(patch,values[i].toStdString().c_str());
+        if (bufferd.isExist())
+        {
+            values.erase(values.begin()+i);
+            i--;
+        }
+    }
+    return values;
+}
+QString EKGWindow::askDiz(const char* recornNum)
+{
+
+//! [0]
+    QString title =QString("Set Disease ID of record ");
+    QString Label = "Disease name:";
+    QString DiseaseName;
+    title += recornNum;
+    bool ok;
+    if(disList.isExist())
+    {
+        vector<QString> dizList = disList.getList();
+        QStringList items;
+        for (int i = 0 ; i < dizList.size();i++)
+            items << dizList[i];
+        DiseaseName = QInputDialog::getItem(this, title,Label, items, 0, false, &ok);
+        if (!ok)
+            DiseaseName = "";
+    }
+    else
+        Wraning("\nYou doesn't create a disease list\nfor do this go to EKG menu and click on \"Add Desase\"");
+    return DiseaseName;
+}
+int EKGWindow::askComplex(int end)
+{
+//! [0]
+    QString buffer =QString("Complex Number To Intercept");
+    bool ok;
+    int i = QInputDialog::getInt(this, buffer,
+                                 buffer, 15, 0, end, 1, &ok);
+    if (ok)
+        return i;
+    else
+        return -1;
+}
+void EKGWindow::Wraning(QString text)
+{
+    QString title = "Warning";
+    QMessageBox *warnWindow = new QMessageBox(QMessageBox::Warning,title,text);
+    warnWindow->setIconPixmap(QPixmap(":/warning"));
+    warnWindow->setWindowIcon(QIcon(":/warning"));
+    warnWindow->show();
+}
+void EKGWindow::addDisease()
+{
+    bool ok;
+    QString title = "Add Disease";
+    QString Label = "Disease name:";
+    QString DiseaseName = QInputDialog::getText(this, title,Label, QLineEdit::Normal, QString(), &ok);
+    if (ok)
+        disList.addItem(DiseaseName);
+}
+void EKGWindow::setDisease()
+{
+    bool ok;
+    QString title = "Set Disease";
+    QString Label = "Disease name:";
+    if(disList.isExist())
+    {
+        vector<QString> dizList = disList.getList();
+        QStringList items;
+        for (int i = 0 ; i < dizList.size();i++)
+            items << dizList[i];
+        QString item = QInputDialog::getItem(this, title,Label, items, 0, false, &ok);
+    }
+    else
+        Wraning("\nYou doesn't create a disease list\nfor do this go to EKG menu and click on \"Add Desase\"");
+}
+QStringList EKGWindow::AddRecordFile(QString patch)
+{
+    QDir dbFinder(patch);
+    QString title = "Add EKG File";
+    QFileDialog::Options options;
+    QString selectedFilter;
+    QStringList files = QFileDialog::getOpenFileNames(this, title,dbFinder.absolutePath(),
+                                "EKG Files (*.diz)",&selectedFilter,options);
+    for (int i = 0 ; i < files.count();i++)
+    {
+        QFileInfo filterFile(files[i]);
+        files[i] = filterFile.baseName();
+    }
+    return files;
+}
 
 
 

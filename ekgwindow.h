@@ -1,9 +1,11 @@
 #ifndef EKGWINDOW_H
 #define EKGWINDOW_H
-#include "ekgsignal.h"
+#include "GButton.h"
 #define TIMEREPEAT 60
 #define EKG_SHIFT 15
 #define TRAiNTIME 8 * SAMPLE_RATE
+#define WIDTH 800
+#define HEIGHT 700
 struct EkgSig
 {
     int start;
@@ -38,6 +40,7 @@ private slots:
 
 private:
     void WekaDo();
+    void Info_Box();
     int gcd(int x, int y);
     int askComplex(int end);
     void Wraning(QString text);
@@ -47,7 +50,10 @@ private:
     QStringList AddRecordFile(QString patch);
     QString askDiz(const char* recornNum);
     vector<QString> getFiles(char *patch);
+
     void createInfo(QString name , int value);
+    void createInfo(QString name , QString value);
+
     int  NextSample(int *,int ,int , int ,bool ) ;
     WFDB_Siginfo OpenSignal(char *DB ,char *record);
     void plot(double *Signal,double *Detect,int size);
@@ -55,9 +61,9 @@ private:
     //Layout
     QSpacerItem *space;
     QWidget *Main_Widget;
-    QHBoxLayout *Main_Layout;
+    QVBoxLayout *Main_Layout;
     QGridLayout *Grid_Layout;
-    QGridLayout *Info_Layout;
+    QHBoxLayout *Info_Layout;
     QHBoxLayout *Feuture_Layout;
     QHBoxLayout *Progress_Layout;
     //Menu
@@ -76,6 +82,7 @@ private:
     QAction *A_SetTime;
     QAction *A_SetDB;
     QAction *A_SetRecord;
+    QAction *B_AskComplex;
     //Plot
     QwtPlot *myPlot;
     QwtPlot *interceptPlot;
@@ -124,6 +131,11 @@ private:
     QLabel *dbPL;//Database Progress Label
     QLabel *fLabel;//EKG Feuture Label
     QGroupBox *fWidget;//EKG Feuture Widget
+    QWidget *BoxWidget;
+    GButton *startButton;
+    GButton *TimeButton;
+    GButton *RecordButton;
+    GButton *DBButton;
     //Signal Info
     int SigTime;
     QString DB_Path;

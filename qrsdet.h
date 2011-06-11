@@ -75,8 +75,10 @@ MA 02143 USA).  For updates to this software, please visit our website
 #include <errno.h>
 #include <algorithm>
 //QT Header
+#include <QtGui>
 #include <QFile>
 #include <QLabel>
+#include <QtCore>
 #include <QLocale>
 #include <QMenuBar>
 #include <QTextEdit>

@@ -41,7 +41,6 @@ public:
     SigDetect();
     SigDetect(vector<double> signal , bool getPlot , QwtPlot *plotwidget ,  int id , int EKG_Age , int start);
     Ekg_Data getInfo();
-    //QwtPlot getPlot();
 private:
     void plot(double *Signal,double *Detect ,int size);
     void ZeroLine();
@@ -64,7 +63,7 @@ private:
     void findS();
     bool findP();
     bool findT();
-    void MK_QRS_Zero();
+    void MK_QRS_Zero(int replace);
     void MK_First_Zero();
     void TPrepare();
     //Functions for Plot
