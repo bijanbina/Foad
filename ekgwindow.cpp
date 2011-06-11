@@ -93,7 +93,7 @@ void EKGWindow::qCurve()
 {
     double x[localInfo.size()], y[localInfo.size()];
     q_curves = new QwtPlotCurve;
-    for (int i = 0 ; i <= localInfo.size(); i++)
+    for (int i = 0 ; i < localInfo.size(); i++)
     {
         int M = localInfo[i].q.detect + localInfo[i].start - TRAiNTIME;
         if (M == -1)
@@ -123,7 +123,7 @@ void EKGWindow::rCurve()
     if(localInfo[0].r.detect!=-1)
     {
         r_curves = new QwtPlotCurve;
-        for (int i = 0 ; i <= localInfo.size(); i++)
+        for (int i = 0 ; i < localInfo.size(); i++)
         {
             int M = localInfo[i].r.detect + localInfo[i].start - TRAiNTIME;
             //Calculate R place
@@ -148,7 +148,7 @@ void EKGWindow::sCurve()
 {
     double x[localInfo.size()], y[localInfo.size()];
     s_curves = new QwtPlotCurve;
-    for (int i = 0 ; i <= localInfo.size(); i++)
+    for (int i = 0 ; i < localInfo.size(); i++)
     {
         int M = localInfo[i].s.detect + localInfo[i].start - TRAiNTIME;
         if (M == -1)

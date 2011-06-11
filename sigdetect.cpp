@@ -372,7 +372,7 @@ bool SigDetect::findR()
         int qs = mMax;
         int rGuess = MAX();
         int tafavot = buffer[rGuess] - buffer[qs];
-        if (tafavot > 90)
+        if (tafavot > 90 && rGuess > buffer.size()/2)
         {
             mMax = rGuess;
         }
