@@ -2,8 +2,8 @@
 r_feature::r_feature(vector<Ekg_Data> input )
 {
     sigInfo = FalseDetection(input);
-    maxHBR = 206.3 - 0.711 * input[0].age;
-    maxABR = 120 + maxHBR;
+    //maxHBR = 206.3 - 0.711 * input[0].age;
+    //maxABR = 120 + maxHBR;
     pr = vector<int> (sigInfo.size());
     R2R = vector<int> (sigInfo.size());
     Q2T = vector<int> (sigInfo.size());
@@ -55,7 +55,6 @@ r_feature::r_feature(vector<Ekg_Data> input )
         else
             Q2T[i] = NOTDETECTED;
     }
-    ekgPower = FalseDetection(ekgPower);
     pr = FalseDetection(pr);
     R2R = FalseDetection(R2R);
       Q2T = FalseDetection(Q2T);
@@ -193,12 +192,12 @@ vector<int> r_feature::FalseDetection(vector<int> fbuffer)
 weka_data r_feature::getWeka()
 {
     weka_data temp;
-    temp.PR = normaldata.PR_interval;
-    temp.Q2T = normaldata.QT_interval;
-    temp.QRS = normaldata.QRScomplex_interval;
-    temp.Ramp = normaldata.R_amp;
-    temp.rate = normaldata.Heart_beat_ven;
-    temp.EKGpower = normaldata.EKGpower;
+    temp.PR = Miangin(normaldata.PR_interval);
+    temp.Q2T = Miangin(normaldata.QT_interval);
+    temp.QRS = Miangin(normaldata.QRScomplex_interval);
+    temp.Ramp = Miangin(normaldata.R_amp);
+    temp.rate = Miangin(normaldata.Heart_beat_ven);
+    temp.EKGpower = Miangin(normaldata.EKGpower);
     temp.disease = "not";
     return temp;
 }
@@ -214,25 +213,33 @@ void r_feature::set_atr()
     atrribute.S_amp = Miangin(Samp);
     atrribute.T_amp = Miangin(Tamp);
     atrribute.EKGpower=Miangin(ekgPower);
+    atrribute.Heart_beat_ven = 12000.0 / atrribute.RR_interval ;
 }
 EKG_atr r_feature::getFueture()
 {
     return atrribute;
 }
-double r_feature::make_normal(vector<double> data)
+vector <double> r_feature::make_normal(vector<double> data)
 {
     double mean = Miangin(data);
-    double normal_data;
+    vector <double> normal_data (data.size());
     double enheraf = sqrt(getVariance(data));
-    normal_data = enheraf/mean ;
+    for (int i=0 ; i<data.size() ; i++)
+    {
+        normal_data.push_back((fabs(data[i] - mean ))/enheraf);
+    }
         return normal_data;
 }
-double r_feature::make_normal(vector<int> data)
+vector <double> r_feature::make_normal(vector<int> data)
 {
     double mean = Miangin(data);
-    double normal_data;
+    vector <double> normal_data (data.size());
     double enheraf = sqrt(getVariance(data));
-    normal_data = enheraf/mean ;
+    for (int i=0 ; i<data.size() ; i++)
+    {
+        normal_data.push_back((fabs(data[i] - mean ))/enheraf);
+        if (normal_data[i] > 1.0)
+            normal_data[i] = 1;
+    }
         return normal_data;
 }
-
