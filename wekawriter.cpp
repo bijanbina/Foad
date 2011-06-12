@@ -2,7 +2,7 @@
 wekaWriter::wekaWriter(vector <QString> diseaselist)
 {
     buffer = vector<weka_data > (0);
-    vector <QString> disease_list = diseaselist ;
+    disease_list = diseaselist ;
 }
 void wekaWriter::setwekadata(weka_data input)
 {

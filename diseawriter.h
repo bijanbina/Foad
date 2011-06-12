@@ -1,6 +1,6 @@
 #ifndef DISEAWRITER_H
 #define DISEAWRITER_H
-#include "feutureextraction.h"
+#include "wekawriter.h"
 class diseaWriter
 {
 public:

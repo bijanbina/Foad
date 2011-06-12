@@ -804,6 +804,7 @@ void EKGWindow::Detection_Click()
         QStringList selectedRecord = AddRecordFile(DB_Path);
         FileMarhale =  100.0 / double(selectedRecord.count());
         filePercentage = 0;
+        vector<QString> just = disList.getList();
         LWW = new wekaWriter(disList.getList());
         for (int k = 0 ; k < selectedRecord.count();k++)
         {

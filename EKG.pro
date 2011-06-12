@@ -19,7 +19,6 @@ SOURCES += \
     bdac.cpp \
     analbeat.cpp \
     sigdetect.cpp \
-    feutureextraction.cpp \
     wekawriter.cpp \
     diseawriter.cpp \
     r_feature.cpp \
@@ -46,7 +45,6 @@ HEADERS += \
     bdac.h \
     analbeat.h \
     sigdetect.h \
-    feutureextraction.h \
     wekawriter.h \
     diseawriter.h \
     r_feature.h \
