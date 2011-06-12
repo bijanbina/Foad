@@ -29,23 +29,21 @@ void wekaWriter::settofile(QString filename)
     disease_string += "}";
     out<<QString("%hello all")<<endl;
     out<<"@RELATION disease"<<endl;
-    out<<"@ATTRIBUTE "<<"PR "<<"NUMERIC"<<endl;
-    out<<"@ATTRIBUTE "<<"QRS "<<"NUMERIC"<<endl;
-    out<<"@ATTRIBUTE "<<"rate "<<"NUMERIC "<<endl;
-    out<<"@ATTRIBUTE "<<"Ramp "<<"NUMERIC "<<endl;
-    out<<"@ATTRIBUTE "<< "Q2T "<<"NUMERIC"<<endl;
-    out<<"@ATTRIBUTE "<<"EKGpower "<<"NUMERIC"<<endl;
+    out<<"@ATTRIBUTE "<<"R amplitude"<<"NUMERIC"<<endl;
+    out<<"@ATTRIBUTE "<<"Q amplitude "<<"NUMERIC"<<endl;
+    out<<"@ATTRIBUTE "<<"P detection ratio"<<"NUMERIC "<<endl;
+    out<<"@ATTRIBUTE "<<"S or QS detection ratio "<<"NUMERIC "<<endl;
+    out<<"@ATTRIBUTE "<< "T detection ratio "<<"NUMERIC"<<endl;
     out<<disease_string<<endl;
     out<<"@DATA \n";
         int j=0;
     while( minsize > j )
     {
-        out<<buffer[j].PR<<"," ;
-        out<<buffer[j].QRS<<",";
-        out<<buffer[j].rate<<",";
+        out<<buffer[j].sqsdetected<<"," ;
+        out<<buffer[j].pdetected<<",";
+        out<<buffer[j].tdetected<<",";
         out<<buffer[j].Ramp << ",";
-        out<<buffer[j].Q2T<<",";
-        out<<buffer[j].EKGpower<<",";
+        out<<buffer[j].Qamp<<",";
         out<<buffer[j].disease;
         out<<endl;
         j++;

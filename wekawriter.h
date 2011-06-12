@@ -3,12 +3,11 @@
 #include "sigdetect.h"
 struct weka_data
 {
-    double EKGpower;
-    double PR ;
+    double Qamp ;
     double Ramp ;
-    double rate ;
-    double QRS ;
-    double Q2T;
+    double pdetected;
+    double sqsdetected ;
+    double tdetected;
     QString disease ;
 };
 class wekaWriter

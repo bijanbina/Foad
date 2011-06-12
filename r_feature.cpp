@@ -1,9 +1,8 @@
 #include "r_feature.h"
 r_feature::r_feature(vector<Ekg_Data> input )
 {
-    sigInfo = FalseDetection(input);
-    //maxHBR = 206.3 - 0.711 * input[0].age;
-    //maxABR = 120 + maxHBR;
+   // sigInfo = FalseDetection(input);
+    sigInfo = input ;
     pr = vector<int> (sigInfo.size());
     R2R = vector<int> (sigInfo.size());
     Q2T = vector<int> (sigInfo.size());
@@ -14,12 +13,39 @@ r_feature::r_feature(vector<Ekg_Data> input )
     Samp = vector<double> (sigInfo.size());
     Tamp = vector<double> (sigInfo.size());
     Pamp = vector<double> (sigInfo.size());
+    st_seg = vector<int> (sigInfo.size());
+    pcount=0;
+    qcount=0;
+    qscount=0;
+    rcount=0;
+    scount=0;
+    tcount=0;
+    //----------------det init------------------------
+    for(int j =0 ; j < sigInfo.size() ; j++)
+    {
+        if (sigInfo[j].q.detect != NOTDETECTED)
+            qcount++;
+        if (sigInfo[j].qs.detect != NOTDETECTED)
+            qscount++;
+        if (sigInfo[j].r.detect != NOTDETECTED)
+            rcount++;
+        if (sigInfo[j].s.detect != NOTDETECTED)
+            scount++;
+        if (sigInfo[j].t.detect != NOTDETECTED)
+            tcount++;
+        pcount += sigInfo[j].Pcount;
+    }
+
+
     for(int i = 0 ; i < sigInfo.size(); i++)
     {
         //ADD R Voltage
-        Ramp[i] = sigInfo[i].r.voltage;
+        if (sigInfo[i].r.detect != NOTDETECTED)
+            Ramp[i] = sigInfo[i].r.voltage;
+        else
+            Ramp[i] = NOTDETECTED;
         //ADD P
-        if (sigInfo[i].Pcount == 1)
+        if (sigInfo[i].Pcount == 1 && sigInfo[i].r.detect != NOTDETECTED)
         {
             Pamp[i] = sigInfo[i].p[0].voltage;
             pr[i] = sigInfo[i].r.detect - sigInfo[i].p[0].detect;
@@ -54,7 +80,17 @@ r_feature::r_feature(vector<Ekg_Data> input )
         }
         else
             Q2T[i] = NOTDETECTED;
+        if(sigInfo[i].t.detect != NOTDETECTED)
+        {
+            if (sigInfo[i].s.detect != NOTDETECTED)
+                st_seg[i] = sigInfo[i].s.end - sigInfo[i].t.start;
+            else
+               st_seg[i] = sigInfo[i].qs.end - sigInfo[i].t.start;
+        }
+        else
+           st_seg[i] = NOTDETECTED;
     }
+    ekgPower = FalseDetection(ekgPower);
     pr = FalseDetection(pr);
     R2R = FalseDetection(R2R);
       Q2T = FalseDetection(Q2T);
@@ -64,27 +100,10 @@ r_feature::r_feature(vector<Ekg_Data> input )
     Samp = FalseDetection(Samp);
     Tamp = FalseDetection(Tamp);
     Pamp = FalseDetection(Pamp);
-    varQRS = getVariance(widthQRS) / Miangin(widthQRS);
-    varQT = getVariance(Q2T) / Miangin(Q2T);
-    varPR = getVariance(pr) / Miangin(pr);
-    varR2R = getVariance(R2R) / Miangin(R2R);
-    varQamp = fabs(getVariance(Qamp) / Miangin(Qamp));
-    varRamp = getVariance(Ramp) / Miangin(Ramp);
-    varSamp = fabs(getVariance(Samp) / Miangin(Samp));//9128111966
-    varTamp = fabs(getVariance(Tamp) / Miangin(Tamp));
-    varPamp = getVariance(Pamp) / Miangin(Pamp);
-    VARekgPower = getVariance(ekgPower) / Miangin(ekgPower);
+    st_seg = FalseDetection(st_seg);
+    hbr = 12000/Miangin(R2R);
     set_atr();
-    normaldata.P_amp=make_normal(Pamp);
-    normaldata.Q_amp=make_normal(Qamp);
-    normaldata.R_amp=make_normal(Ramp);
-    normaldata.S_amp=make_normal(Samp);
-    normaldata.T_amp=make_normal(Tamp);
-    normaldata.EKGpower=make_normal(ekgPower);
-    normaldata.PR_interval=make_normal(pr);
-    normaldata.RR_interval = make_normal(R2R);
-    normaldata.QT_interval = make_normal(Q2T);
-    normaldata.QRScomplex_interval = make_normal(widthQRS);
+    normalize();
 }
 double r_feature::getVariance(vector<double> fbuffer)
 {
@@ -192,12 +211,11 @@ vector<int> r_feature::FalseDetection(vector<int> fbuffer)
 weka_data r_feature::getWeka()
 {
     weka_data temp;
-    temp.PR = Miangin(normaldata.PR_interval);
-    temp.Q2T = Miangin(normaldata.QT_interval);
-    temp.QRS = Miangin(normaldata.QRScomplex_interval);
-    temp.Ramp = Miangin(normaldata.R_amp);
-    temp.rate = Miangin(normaldata.Heart_beat_ven);
-    temp.EKGpower = Miangin(normaldata.EKGpower);
+    temp.Qamp = normaldata.Q_amp ;
+    temp.pdetected = normaldata.pdetected ;
+    temp.sqsdetected = normaldata.sqsdetected ;
+    temp.tdetected = normaldata.tdetected;
+    temp.Ramp = normaldata.R_amp;
     temp.disease = "not";
     return temp;
 }
@@ -213,33 +231,41 @@ void r_feature::set_atr()
     atrribute.S_amp = Miangin(Samp);
     atrribute.T_amp = Miangin(Tamp);
     atrribute.EKGpower=Miangin(ekgPower);
-    atrribute.Heart_beat_ven = 12000.0 / atrribute.RR_interval ;
+    atrribute.Heart_beat_ven = hbr ;
 }
 EKG_atr r_feature::getFueture()
 {
     return atrribute;
 }
-vector <double> r_feature::make_normal(vector<double> data)
+double r_feature::make_normal(vector<double> data)
 {
     double mean = Miangin(data);
-    vector <double> normal_data (data.size());
+    double normal_data;
     double enheraf = sqrt(getVariance(data));
-    for (int i=0 ; i<data.size() ; i++)
-    {
-        normal_data.push_back((fabs(data[i] - mean ))/enheraf);
-    }
+    normal_data = enheraf/mean ;
         return normal_data;
 }
-vector <double> r_feature::make_normal(vector<int> data)
+double r_feature::make_normal(vector<int> data)
 {
     double mean = Miangin(data);
-    vector <double> normal_data (data.size());
+    double normal_data;
     double enheraf = sqrt(getVariance(data));
-    for (int i=0 ; i<data.size() ; i++)
-    {
-        normal_data.push_back((fabs(data[i] - mean ))/enheraf);
-        if (normal_data[i] > 1.0)
-            normal_data[i] = 1;
-    }
+    normal_data = enheraf/mean ;
         return normal_data;
+}
+void r_feature::normalize()
+{
+normaldata.R_amp=(Miangin(Ramp)-20)/600;
+if (normaldata.R_amp > 1)
+    normaldata.R_amp = 1;
+else if(normaldata.R_amp <0 )
+    normaldata.R_amp=0;
+normaldata.tdetected = tcount / hbr ;
+normaldata.pdetected = pcount / hbr ;
+normaldata.sqsdetected = (scount + qscount) / hbr ;
+normaldata.Q_amp = (Miangin(Qamp) +57)/87;
+if (normaldata.Q_amp > 1)
+    normaldata.Q_amp = 1;
+else if(normaldata.Q_amp <0 )
+    normaldata.Q_amp=0;
 }
