@@ -18,6 +18,7 @@ bool diseaWriter::isExist()
 QString diseaWriter::getDisease()
 {
     QString buffer;
+    buffer = "normall";
     if(isExist())
     {
         DiseseFile->open(QIODevice::ReadOnly | QIODevice::Text);

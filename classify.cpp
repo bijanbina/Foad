@@ -181,9 +181,9 @@ int Classify(int *newBeat,int rr, int noiseLevel, int *beatMatch, int *fidAdj,
 	// from a baseline shift.
 
 	if( (blShift > BL_SHIFT_LIMIT)
-		&& (lastBeatWasNew == 1)
-		&& (lastRhythmClass == NORMAL)
-		&& (rhythmClass == NORMAL) )
+                && (lastBeatWasNew == 1)
+                && (lastRhythmClass == NORMAL)
+                && (rhythmClass == NORMAL) )
 		ClearLastNewType() ;
 
 	lastBeatWasNew = 0 ;
@@ -199,8 +199,8 @@ int Classify(int *newBeat,int rr, int noiseLevel, int *beatMatch, int *fidAdj,
 
 	// Apply a stricter match limit to premature beats.
 
-	if((matchIndex < MATCH_LIMIT) && (rhythmClass == PVC) &&
-		MinimumBeatVariation(morphType) && (mi2 > PVC_MATCH_WITH_AMP_LIMIT))
+        if((matchIndex < MATCH_LIMIT) && (rhythmClass == PVC) &&
+                MinimumBeatVariation(morphType) && (mi2 > PVC_MATCH_WITH_AMP_LIMIT))
 		{
 		morphType = NewBeatType(newBeat) ;
 		lastBeatWasNew = 1 ;
@@ -208,13 +208,13 @@ int Classify(int *newBeat,int rr, int noiseLevel, int *beatMatch, int *fidAdj,
 
 	// Match if within standard match limits.
 
-	else if((matchIndex < MATCH_LIMIT) && (mi2 <= MATCH_WITH_AMP_LIMIT))
+        else if((matchIndex < MATCH_LIMIT) && (mi2 <= MATCH_WITH_AMP_LIMIT))
 		UpdateBeatType(morphType,newBeat,mi2,shiftAdj) ;
 
 	// If the beat isn't noisy but doesn't match, start a new beat.
 
-	else if((blShift < BL_SHIFT_LIMIT) && (noiseLevel < NEW_TYPE_NOISE_THRESHOLD)
-		&& (hfNoise < NEW_TYPE_HF_NOISE_LIMIT))
+        else if((blShift < BL_SHIFT_LIMIT) && (noiseLevel < NEW_TYPE_NOISE_THRESHOLD)
+                && (hfNoise < NEW_TYPE_HF_NOISE_LIMIT))
 		{
 		morphType = NewBeatType(newBeat) ;
 		lastBeatWasNew = 1 ;
@@ -258,7 +258,7 @@ int Classify(int *newBeat,int rr, int noiseLevel, int *beatMatch, int *fidAdj,
 		// beats of this type, use the actual beat for width
 		// estimate.
 
-		if((beatWidth > offset-onset) && (GetBeatTypeCount(morphType) <= 4))
+                if((beatWidth > offset-onset) && (GetBeatTypeCount(morphType) <= 4))
 			{
 			beatWidth = offset-onset ;
 			*fidAdj = ((offset+onset)/2)-FIDMARK ;
@@ -282,7 +282,7 @@ int Classify(int *newBeat,int rr, int noiseLevel, int *beatMatch, int *fidAdj,
 
 	// Compare the beat type, or actual beat to the dominant beat.
 
-	if((morphType != domType) && (morphType != 8))
+        if((morphType != domType) && (morphType != 8))
 		domIndex = DomCompare(morphType,domType) ;
 	else if(morphType == 8)
 		domIndex = DomCompare2(newBeat,domType) ;
@@ -301,7 +301,7 @@ int Classify(int *newBeat,int rr, int noiseLevel, int *beatMatch, int *fidAdj,
 	// If this morphology has not been classified yet, attempt to classify
 	// it.
 
-	if((beatClass == UNKNOWN) && (morphType < MAXTYPES))
+        if((beatClass == UNKNOWN) && (morphType < MAXTYPES))
 		{
 
 		// Classify as normal if there are 6 in a row
@@ -314,13 +314,13 @@ int Classify(int *newBeat,int rr, int noiseLevel, int *beatMatch, int *fidAdj,
 		// are three in a row.  The width criterion prevents ventricular beats
 		// from being classified as normal during VTACH (MIT/BIH 205).
 
-		if((runCount >= 3) && (domType != -1) && (beatWidth < domWidth+BEAT_MS20))
+                if((runCount >= 3) && (domType != -1) && (beatWidth < domWidth+BEAT_MS20))
 			SetBeatClass(morphType,NORMAL) ;
 
 		// If there is no dominant type established yet, classify any type
 		// with six in a row as NORMAL.
 
-		else if((runCount >= 6) && (domType == -1))
+                else if((runCount >= 6) && (domType == -1))
 			SetBeatClass(morphType,NORMAL) ;
 
 		// During bigeminy, classify the premature beats as ventricular if
@@ -328,7 +328,7 @@ int Classify(int *newBeat,int rr, int noiseLevel, int *beatMatch, int *fidAdj,
 
 		else if(IsBigeminy() == 1)
 			{
-			if((rhythmClass == PVC) && (beatWidth > BEAT_MS100))
+                        if((rhythmClass == PVC) && (beatWidth > BEAT_MS100))
 				SetBeatClass(morphType,PVC) ;
 			else if(rhythmClass == NORMAL)
 				SetBeatClass(morphType,NORMAL) ;
@@ -422,8 +422,8 @@ int TempClass(int rhythmClass, int morphType,
 	// and looks sufficiently different than the dominant beat
 	// classify as PVC.
 
-	if(MinimumBeatVariation(domType) && (rhythmClass == PVC)
-		&& (domIndex > R2_DI_THRESHOLD) && (GetDomRhythm() == 1))
+        if(MinimumBeatVariation(domType) && (rhythmClass == PVC)
+                && (domIndex > R2_DI_THRESHOLD) && (GetDomRhythm() == 1))
 		return(PVC) ;
 
 	// Rule 3:  If the beat is sufficiently narrow, classify as normal.
@@ -435,7 +435,7 @@ int TempClass(int rhythmClass, int morphType,
 	// detected morphology and it is not premature, consider it normal
 	// (probably noisy).
 
-	if((morphType == MAXTYPES) && (rhythmClass != PVC)) // == UNKNOWN
+        if((morphType == MAXTYPES) && (rhythmClass != PVC)) // == UNKNOWN
 		return(NORMAL) ;
 
 	// Rule 6:  If the maximum number of beat types have been stored,
@@ -443,28 +443,28 @@ int TempClass(int rhythmClass, int morphType,
 	// beat of this morphology has been seen, call it normal (probably
 	// noisy).
 
-	if((GetTypesCount() == MAXTYPES) && (GetBeatTypeCount(morphType)==1)
-			 && (rhythmClass == UNKNOWN))
+        if((GetTypesCount() == MAXTYPES) && (GetBeatTypeCount(morphType)==1)
+                         && (rhythmClass == UNKNOWN))
 		return(NORMAL) ;
 
 	// Rule 7:  If this beat looks like the dominant beat and the
 	// rhythm is regular, call it normal.
 
-	if((domIndex < R7_DI_THRESHOLD) && (rhythmClass == NORMAL))
+        if((domIndex < R7_DI_THRESHOLD) && (rhythmClass == NORMAL))
 		return(NORMAL) ;
 
 	// Rule 8:  If post classification rhythm is normal for this
 	// type and its shape is close to the dominant shape, classify
 	// as normal.
 
-	if((domIndex < R8_DI_THRESHOLD) && (CheckPCRhythm(morphType) == NORMAL))
+        if((domIndex < R8_DI_THRESHOLD) && (CheckPCRhythm(morphType) == NORMAL))
 		return(NORMAL) ;
 
 	// Rule 9:  If the beat is not premature, it looks similar to the dominant
 	// beat type, and the dominant beat type is variable (noisy), classify as
 	// normal.
 
-	if((domIndex < R9_DI_THRESHOLD) && (rhythmClass != PVC) && WideBeatVariation(domType))
+        if((domIndex < R9_DI_THRESHOLD) && (rhythmClass != PVC) && WideBeatVariation(domType))
 		return(NORMAL) ;
 
 	// Rule 10:  If this beat is significantly different from the dominant beat
@@ -472,32 +472,32 @@ int TempClass(int rhythmClass, int morphType,
 	// of this type is PVC, and the dominant rhythm is regular, classify as PVC.
 
 	if((domIndex > R10_DI_THRESHOLD)
-		&& (GetBeatTypeCount(morphType) >= R10_BC_LIM) &&
-		(CheckPCRhythm(morphType) == PVC) && (GetDomRhythm() == 1))
+                && (GetBeatTypeCount(morphType) >= R10_BC_LIM) &&
+                (CheckPCRhythm(morphType) == PVC) && (GetDomRhythm() == 1))
 		return(PVC) ;
 
 	// Rule 11: if the beat is wide, wider than the dominant beat, doesn't
 	// appear to be noisy, and matches a previous type, classify it as
 	// a PVC.
 
-	if( (beatWidth >= R11_MIN_WIDTH) &&
-		(((beatWidth - domWidth >= R11_WIDTH_DIFF1) && (domWidth < R11_WIDTH_BREAK)) ||
-		(beatWidth - domWidth >= R11_WIDTH_DIFF2)) &&
-		(hfNoise < R11_HF_THRESHOLD) && (noiseLevel < R11_MA_THRESHOLD) && (blShift < BL_SHIFT_LIMIT) &&
-		(morphType < MAXTYPES) && (GetBeatTypeCount(morphType) > R11_BC_LIM))	// Rev 1.1
+        if( (beatWidth >= R11_MIN_WIDTH) &&
+                (((beatWidth - domWidth >= R11_WIDTH_DIFF1) && (domWidth < R11_WIDTH_BREAK)) ||
+                (beatWidth - domWidth >= R11_WIDTH_DIFF2)) &&
+                (hfNoise < R11_HF_THRESHOLD) && (noiseLevel < R11_MA_THRESHOLD) && (blShift < BL_SHIFT_LIMIT) &&
+                (morphType < MAXTYPES) && (GetBeatTypeCount(morphType) > R11_BC_LIM))	// Rev 1.1
 
 		return(PVC) ;
 
 	// Rule 12:  If the dominant rhythm is regular and this beat is premature
 	// then classify as PVC.
 
-	if((rhythmClass == PVC) && (GetDomRhythm() == 1))
+        if((rhythmClass == PVC) && (GetDomRhythm() == 1))
 		return(PVC) ;
 
 	// Rule 14:  If the beat is regular and the dominant rhythm is regular
 	// call the beat normal.
 
-	if((rhythmClass == NORMAL) && (GetDomRhythm() == 1))
+        if((rhythmClass == NORMAL) && (GetDomRhythm() == 1))
 		return(NORMAL) ;
 
 	// By this point, we know that rhythm will not help us, so we
@@ -508,7 +508,7 @@ int TempClass(int rhythmClass, int morphType,
 	// absolute scale, and significantly different from the
 	// dominant beat, call it a PVC.
 
-	if((beatWidth > domWidth) && (domIndex > R15_DI_THRESHOLD) &&
+        if((beatWidth > domWidth) && (domIndex > R15_DI_THRESHOLD) &&
 		(beatWidth >= R15_WIDTH_THRESHOLD))
 		return(PVC) ;
 
@@ -598,7 +598,7 @@ int DomMonitor(int morphType, int rhythmClass, int beatWidth, int rr, int reset)
 	// Once we have wrapped around, subtract old beat types from
 	// the beat counts.
 
-	if((DMBeatTypes[brIndex] != -1) && (DMBeatTypes[brIndex] != MAXTYPES))
+        if((DMBeatTypes[brIndex] != -1) && (DMBeatTypes[brIndex] != MAXTYPES))
 		{
 		--DMBeatCounts[DMBeatTypes[brIndex]] ;
 		DMNormCounts[DMBeatTypes[brIndex]] -= DMBeatClasses[brIndex] ;
@@ -631,14 +631,14 @@ int DomMonitor(int morphType, int rhythmClass, int beatWidth, int rr, int reset)
 
 		i = brIndex - 1 ;
 		if(i < 0) i += DM_BUFFER_LENGTH ;
-		for(runCount = 0; (DMBeatTypes[i] == morphType) && (runCount < 6); ++runCount)
+                for(runCount = 0; (DMBeatTypes[i] == morphType) && (runCount < 6); ++runCount)
 			if(--i < 0) i += DM_BUFFER_LENGTH ;
 
 		// If the rhythm is regular, the beat width is less than 130 ms, and
 		// there have been at least two in a row, consider the beat to be
 		// normal.
 
-		if((rhythmClass == NORMAL) && (beatWidth < BEAT_MS130) && (runCount >= 1))
+                if((rhythmClass == NORMAL) && (beatWidth < BEAT_MS130) && (runCount >= 1))
 			{
 			DMBeatClasses[brIndex] = 1 ;
 			++DMNormCounts[morphType] ;
@@ -649,7 +649,7 @@ int DomMonitor(int morphType, int rhythmClass, int beatWidth, int rr, int reset)
 		// was noise and this beat is normal.
 
 		else if(rr < ((FIDMARK-GetBeatBegin(morphType))*SAMPLE_RATE/BEAT_SAMPLE_RATE)
-			&& (oldType == morphType))
+                        && (oldType == morphType))
 			{
 			DMBeatClasses[brIndex] = 1 ;
 			++DMNormCounts[morphType] ;
@@ -704,8 +704,8 @@ int DomMonitor(int morphType, int rhythmClass, int beatWidth, int rr, int reset)
 	// but at least 10 don't seem normal, reclassify it to UNKNOWN.
 
 	for(i = 0; i < 8; ++i)
-		if((DMBeatCounts[i] > 10) && (DMNormCounts[i] == 0) && (i != dom)
-			&& (GetBeatClass(i) == NORMAL))
+                if((DMBeatCounts[i] > 10) && (DMNormCounts[i] == 0) && (i != dom)
+                        && (GetBeatClass(i) == NORMAL))
 			SetBeatClass(i,UNKNOWN) ;
 
 	// Save the dominant type in a global variable so that it is
@@ -776,7 +776,7 @@ void CombineDomData(int oldType, int newType)
 int GetRunCount()
 {
 	int i ;
-	for(i = 1; (i < 8) && (RecentTypes[0] == RecentTypes[i]); ++i) ;
+        for(i = 1; (i < 8) && (RecentTypes[0] == RecentTypes[i]); ++i) ;
 	return i ;
 }
 
