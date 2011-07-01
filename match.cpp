@@ -322,7 +322,7 @@ void UpdateBeat(int *aveBeat, int *newBeat, int shift)
 
 	for(i = 0; i < BEATLGTH; ++i)
 		{
-		if((i+shift >= 0) && (i+shift < BEATLGTH))
+		if((i+shift >= 0) and (i+shift < BEATLGTH))
 			{
 			tempLong = aveBeat[i] ;
 			tempLong *= 7 ;

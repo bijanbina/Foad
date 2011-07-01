@@ -74,6 +74,11 @@ MA 02143 USA).  For updates to this software, please visit our website
 #include <dirent.h>
 #include <errno.h>
 #include <algorithm>
+#include <time.h>
+#include <string>
+#include <sstream>
+#include <cstdlib>
+#include <fstream>
 //QT Header
 #include <QtGui>
 #include <QFile>
@@ -99,7 +104,6 @@ MA 02143 USA).  For updates to this software, please visit our website
 #include <QProgressBar>
 #include <QApplication>
 #include <QDesktopWidget>
-
 //WFDB Header
 #include <wfdb/wfdb.h>
 #include <wfdb/ecgcodes.h>
@@ -118,16 +122,22 @@ MA 02143 USA).  For updates to this software, please visit our website
 #include <qwt_double_rect.h>
 #include <qwt_symbol.h>
 #include <qwt_color_map.h>
-//Internal Header
-
 //Pthread
 #include <pthread.h>
+//Intel Multithread
+#include <tbb/parallel_for.h>
+#include <tbb/blocked_range.h>
+//Neural Network
+#include <floatfann.h>
+//Fast Filter Transform
+#include <fftw3.h>
 //#include "wekawriter.h"
 //Define
 #define PRE_BLANK	MS195
 #define MIN_PEAK_AMP	7 // Prevents detections of peaks smaller than 150 uV.
-
+//Name Space
 using namespace std;
+using namespace tbb;
 
 //New Class Implement By Bijan Binaee on March 2011
 class QRSDetection

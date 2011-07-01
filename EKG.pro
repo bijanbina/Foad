@@ -24,12 +24,18 @@ SOURCES += \
     r_feature.cpp \
     listrw.cpp \
     ekgsignal.cpp \
-    GButton.cpp
+    GButton.cpp \
+    ekgscan.cpp \
+    ekgnn.cpp
 
 DEPENDPATH  += /usr/include/qwt-qt4
 INCLUDEPATH += /usr/include/qwt-qt4
 LIBS        += -lqwt-qt4 \
-               -lwfdb
+               -lwfdb \
+               -lm \
+               -lfann \
+               -ltbb \
+               -lfftw3
 
 #QMAKE_CXXFLAGS += -E
 QMAKE_CXXFLAGS += -mtune=core2
@@ -50,7 +56,9 @@ HEADERS += \
     r_feature.h \
     listrw.h \
     ekgsignal.h \
-    GButton.h
+    GButton.h \
+    ekgscan.h \
+    ekgnn.h
 
 RESOURCES += \
     EKG.qrc
