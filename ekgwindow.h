@@ -1,11 +1,12 @@
 #ifndef EKGWINDOW_H
 #define EKGWINDOW_H
-#include "GButton.h"
+#include "ekgnn.h"
 #define TIMEREPEAT 60
 #define EKG_SHIFT 15
 #define TRAiNTIME 8 * SAMPLE_RATE
 #define WIDTH 800
-#define HEIGHT 700
+#define HEIGHT 720
+#define ASKCOMPLEX false
 struct EkgSig
 {
     int start;
@@ -19,6 +20,7 @@ public:
     explicit EKGWindow(QWidget *parent = 0);
     weka_data readSignal(WFDB_Siginfo signal_info ,char *record , int time
              ,int Starttime ,bool getPlot=false,  bool getIntercept=false);
+    void readScan(vector<double> navar);
 signals:
 
 private slots:
@@ -37,6 +39,10 @@ private slots:
     void A_WekaMode_change();
     void A_InterMode_change();
     void A_DiseaseMode_change();
+    void openTrain();
+    void scan();
+    void openImage();
+    void openRecord();
 
 private:
     void WekaDo();
@@ -69,6 +75,7 @@ private:
     //Menu
     QMenuBar *menu;
     QAction *A_Ekg_signal;
+    QAction *A_Start_Train;
     QAction *A_Det_signal;
     QAction *A_Fil_signal;
     QAction *A_Plot_show;
@@ -78,6 +85,8 @@ private:
     QAction *A_InterMode;
     QAction *A_WekaMode;
     QAction *A_Save;
+    QAction *A_Scan;
+    QAction *A_LoadImage;
     QAction *A_clearlog;
     QAction *A_SetTime;
     QAction *A_SetDB;
@@ -102,14 +111,15 @@ private:
     void sCurve();
     void pCurve();
     void tCurve();
-    //Ekg
+    //EKG
     int mode;
     EKG_atr localFeature;
-    wekaWriter *LWW;
-    ListRW disList;
+    wekaWriter LWW;                //Neural Network Train Data Constructor
+    ListRW disList;                //Disease List
     char record[20];
     double beatcount;
     char DBbuffer[100];
+    weka_data localWeka;
     vector<double> Signal;
     int ventricularrate();
     BeatDetection *LocalBDAC;
@@ -135,11 +145,12 @@ private:
     GButton *startButton;
     GButton *TimeButton;
     GButton *RecordButton;
-    GButton *DBButton;
     //Signal Info
     int SigTime;
     QString DB_Path;
     QString SigRecord;
+    //Scanner
+    EkgScan ekgScanner;
 };
 
 #endif // EKGWINDOW_H

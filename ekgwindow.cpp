@@ -55,9 +55,6 @@ void EKGWindow::plot(double *Signal,double *Detect ,int size)
     sym.setSize(7);
     Detect_curves->setSymbol(sym);
     Detect_curves->setStyle(QwtPlotCurve::NoCurve);
-    //setStyle(QwtPlotCurve::Sticks);
-    //--------------- Add Feuture -------------------
-
     // ------copy the data into the curves-----------
     Signal_curves->setData(x,Signal,size);
     Detect_curves->setData(XDetect,YDetect,yDetect.size());
@@ -188,14 +185,18 @@ EKGWindow::EKGWindow(QWidget *parent) :QMainWindow(parent)
     //File Menu
     QMenu *FileMenu = menu->addMenu("File");
     A_Start = FileMenu->addAction("Start");
+    A_Scan = FileMenu->addAction("Scan");
+    A_LoadImage = FileMenu->addAction("Open Image");
     A_Save = FileMenu->addAction("Save Weka");
     A_Save->setEnabled(false);
+    FileMenu->addSeparator();
+    A_Start_Train = FileMenu->addAction("Start Train!");
     FileMenu->addSeparator();
     //Mode Menu in File
     QMenu *ModeMenu = FileMenu->addMenu("Mode");
     A_InterMode = ModeMenu->addAction("Intercepting");
     A_DiseaseMode = ModeMenu->addAction("Set Disease");
-    A_WekaMode = ModeMenu->addAction("Weka");
+    A_WekaMode = ModeMenu->addAction("Training Mode");
     //set Checkable Modes
     A_DiseaseMode->setCheckable(true);
     A_InterMode->setCheckable(true);
@@ -231,7 +232,7 @@ EKGWindow::EKGWindow(QWidget *parent) :QMainWindow(parent)
     B_AskComplex = SigMenu->addAction("Ask Complex Number");
 
     B_AskComplex->setCheckable(true);
-    B_AskComplex->setChecked(true);
+    B_AskComplex->setChecked(ASKCOMPLEX);
     //Ekg Menu
     QMenu *EKGMenu = menu->addMenu("EKG");
     QAction *A_addDiz = EKGMenu->addAction("Add Disease");
@@ -271,9 +272,8 @@ EKGWindow::EKGWindow(QWidget *parent) :QMainWindow(parent)
     zoomer->setMousePattern(QwtEventPattern::MouseSelect3,Qt::RightButton);
 
     //Button
-    TimeButton = new GButton(GButton::Blue,"Set Time");
-    RecordButton = new GButton(GButton::Red,"Set Record");
-    DBButton = new GButton(GButton::Orenge,"Set Database");
+    TimeButton = new GButton(GButton::Red,"Set Time");
+    RecordButton = new GButton(GButton::Orenge,"Open Record");
 
     //Create Layout
     CreateLayout(true);
@@ -287,12 +287,11 @@ EKGWindow::EKGWindow(QWidget *parent) :QMainWindow(parent)
     if (!disList.isExist())
             Wraning("\nYou doesn't create a disease list\nfor do this go to EKG menu and click on \"Add Desase\"");
     //Signal and slot connect
+    connect(A_Start_Train,SIGNAL(triggered(bool)),this,SLOT(A_Det_change()));
     connect(A_Quit,SIGNAL(triggered(bool)),this,SLOT(close()));
     connect(A_SetDB,SIGNAL(triggered(bool)),this,SLOT(setDB_Path()));
-    connect(DBButton,SIGNAL(click()),this,SLOT(setDB_Path()));
     connect(A_Save,SIGNAL(triggered(bool)),this,SLOT(A_Weka_Save()));
     connect(A_Start,SIGNAL(triggered(bool)),this,SLOT(Detection_Click()));
-    connect(startButton,SIGNAL(click()),this,SLOT(Detection_Click()));
     connect(A_Plot_show,SIGNAL(triggered(bool)),this,SLOT(A_Plot_change()));
     connect(A_Det_signal,SIGNAL(triggered(bool)),this,SLOT(A_Det_change()));
     connect(A_Ekg_signal,SIGNAL(triggered(bool)),this,SLOT(A_Sig_change()));
@@ -302,11 +301,11 @@ EKGWindow::EKGWindow(QWidget *parent) :QMainWindow(parent)
     connect(A_DiseaseMode,SIGNAL(triggered(bool)),this,SLOT(A_DiseaseMode_change()));
     connect(A_SetRecord,SIGNAL(triggered(bool)),this,SLOT(setRecordNum()));
     connect(A_SetTime,SIGNAL(triggered(bool)),this,SLOT(setSigTime()));
-    connect(RecordButton,SIGNAL(click()),this,SLOT(setRecordNum()));
-    connect(TimeButton,SIGNAL(click()),this,SLOT(setSigTime()));
     connect(A_setAge,SIGNAL(triggered(bool)),this,SLOT(setAge()));
     connect(A_addDiz,SIGNAL(triggered(bool)),this,SLOT(addDisease()));
     connect(A_setDiz,SIGNAL(triggered(bool)),this,SLOT(setDisease()));
+    connect(A_Scan,SIGNAL(triggered(bool)),this,SLOT(scan()));
+    connect(A_LoadImage,SIGNAL(triggered(bool)),this,SLOT(openImage()));
     Percentage = 0;
 }
 void EKGWindow::A_Fil_change()
@@ -377,7 +376,7 @@ void EKGWindow::A_InterMode_change()
         A_WekaMode->setChecked(true);
     }
     CreateLayout(true);
-    resize(WIDTH,HEIGHT);
+    //resize(WIDTH,HEIGHT);
 }
 void EKGWindow::A_DiseaseMode_change()
 {
@@ -426,8 +425,9 @@ void EKGWindow::A_WekaMode_change()
 void EKGWindow::A_Weka_Save()
 {
     QString title = "Save Weka";
-    QString path = QFileDialog::getSaveFileName(this,title,"","Weka File (*.weka);");
-    LWW->settofile(path);
+    QString path = QFileDialog::getSaveFileName(this,title,"","Train File(*.dat);");
+    if(!path.isEmpty())
+        LWW >> path;
 }
 void EKGWindow::CreateLayout(bool newplot)
 {
@@ -516,6 +516,7 @@ void EKGWindow::CreateLayout(bool newplot)
     Main_Widget->setLayout(Main_Layout);
     setCentralWidget(Main_Widget);
     setWindowIcon(QIcon(":/icon"));
+    setWindowTitle("Foad");
 }
 void EKGWindow::createInfo(QString name , int value)
 {
@@ -538,6 +539,47 @@ void EKGWindow::createInfo(QString name , QString value)
     fLabel = new QLabel(value);
     Feuture_Layout->addWidget(fLabel);
     fWidget->setLayout(Feuture_Layout);
+}
+void EKGWindow::scan()
+{
+    ekgScanner.scan();
+}
+void EKGWindow::openImage()
+{
+    QString title = "Open Scanned Signal";
+    QFileDialog::Options options;
+    QString selectedFilter;
+    QString files = QFileDialog::getOpenFileName(this, title,"","Picture (*.png *.jpg)",&selectedFilter,options);
+    if(!files.isEmpty())
+        ekgScanner.loadPic(files);
+    readScan(ekgScanner.getSignal());
+}
+void EKGWindow::openRecord()
+{
+    QString title = "Open Record";
+    QFileDialog::Options options;
+    QString selectedFilter;
+    QFileInfo dbFileInfo = QFileInfo(DB_Path);
+    QString files = QFileDialog::getOpenFileName(this, title,dbFileInfo.absoluteFilePath(),
+                                                 "Record (*.dat)",&selectedFilter,options);
+    if(!files.isEmpty())
+    {
+        QFileInfo recordFile = QFileInfo(files);
+        SigRecord = recordFile.baseName();
+    }
+    Detection_Click();
+}
+void EKGWindow::openTrain()
+{
+    QString title = "Open Train File";
+    QFileDialog::Options options;
+    QString selectedFilter;
+    QString files = QFileDialog::getOpenFileName(this, title,"","Trained File (*.dat)",&selectedFilter,options);
+    if(!files.isEmpty())
+    {
+        QFileInfo recordFile = QFileInfo(files);
+        SigRecord = recordFile.baseName();
+    }
 }
 /*--------------------------------------------------------------------------------------------
 |                                     Read Signal                                            |
@@ -622,15 +664,12 @@ weka_data EKGWindow::readSignal(WFDB_Siginfo signal_info ,char *record , int tim
     double percentageBuffer = (kgh / signal_info.nsamp) * 1.9;
     filePercentage += FileMarhale * percentageBuffer;
     //--------------------Start Reading Signal--------------
-    while((NextSample(ecg,2,InputFileSampleFrequency,SAMPLE_RATE,false) >= 0) && (SampleCount <= time))
+    while((NextSample(ecg,2,InputFileSampleFrequency,SAMPLE_RATE,false) >= 0) && (SampleCount < time))
     {
         SampleNumber++;
         if (SampleNumber >= Starttime )
         {
-            ++SampleCount ;
-
             // Set baseline to 0 and resolution to 5 mV/lsb (200 units/mV)
-
             lTemp = ecg[0] - ADCZero ;
             lTemp *= SAMPLE_RATE;
             if (ADCUnit != 0)
@@ -639,14 +678,9 @@ weka_data EKGWindow::readSignal(WFDB_Siginfo signal_info ,char *record , int tim
                 lTemp /= WFDB_DEFGAIN ;
             ecg[0] = lTemp ;
             signal[SampleCount] = ecg[0] ;
-
             // Pass sample to beat detection and classification.
-
             delay = LocalBDAC->BeatDetectAndClassify(ecg[0], &beatType, &beatMatch) ;
-
-            // If a beat was detected, annotate the beat location
-            // and type.
-
+            SampleCount++;
             if(delay != 0)
             {
                 delaycount++;
@@ -672,7 +706,6 @@ weka_data EKGWindow::readSignal(WFDB_Siginfo signal_info ,char *record , int tim
                 DetectionTime /= SAMPLE_RATE ;
             }
         }
-        // Reset database after record is done.
     }
     //----------------------Check Signal--------------------
     if(SampleCount < time)
@@ -739,7 +772,26 @@ weka_data EKGWindow::readSignal(WFDB_Siginfo signal_info ,char *record , int tim
     weka_data Return = LFE.getWeka();
     if (DizReader.isExist())
         Return.disease = DizReader.getDisease();
+    localWeka = Return;
     return Return;
+}
+void EKGWindow::readScan(vector<double> navar)
+{
+    //----------------------Variable------------------------
+    int BufferSize = navar.size();
+    if (BufferSize < 10)
+        return;
+    double signal[BufferSize],Ddetect_sig[BufferSize];
+    //-------------------Copy Signal---------------------
+    for(int i = 0 ; i < BufferSize ; i++)
+    {
+        signal[i] = navar[i];
+        Ddetect_sig[i] = 0;
+    }
+    //-------------------Cofigure Plot-------------------
+    double *Psignal = signal;
+    double *PDdetect_sig = Ddetect_sig;
+    plot(Psignal,PDdetect_sig,BufferSize);
 }
 WFDB_Siginfo EKGWindow::OpenSignal(char *DB ,char *record)
 {
@@ -749,7 +801,7 @@ WFDB_Siginfo EKGWindow::OpenSignal(char *DB ,char *record)
 //------------------Configure Database------------------
     setwfdb(DB) ;
 //----------------------Check Signal--------------------
-    if(isigopen(record,signal_info,2) < 1)
+    if(isigopen(record,signal_info,2) < 2)
     {
         OpenError(record);
         return signal_info[0];
@@ -767,7 +819,6 @@ void EKGWindow::Detection_Click()
     strcpy(record, SigRecord.toStdString().c_str());
     //----------- Create Database Patch ------------
     strcpy(DBbuffer , DB_Path.toStdString().c_str());
-
     if (mode == 1)
     {
         signal_info = OpenSignal(DBbuffer, record);
@@ -805,7 +856,7 @@ void EKGWindow::Detection_Click()
         FileMarhale =  100.0 / double(selectedRecord.count());
         filePercentage = 0;
         vector<QString> just = disList.getList();
-        LWW = new wekaWriter(disList.getList());
+        LWW.setDiseaseList(disList.getList());
         for (int k = 0 ; k < selectedRecord.count();k++)
         {
             filePercentage = double(k) * FileMarhale;
@@ -826,6 +877,8 @@ void EKGWindow::WekaDo()
     //
     weka_data wekaBuffer;
     signal_info = OpenSignal(DBbuffer, record);
+    if(signal_info.cksum == -1)
+        return;
     if(A_Plot_show->isChecked())
     {
         fileProgress->setValue(Percentage);
@@ -833,7 +886,7 @@ void EKGWindow::WekaDo()
         wekaBuffer = readSignal( signal_info, record , SigTime , 0,true);
         startTime += TIMEREPEAT;
         if (!wekaBuffer.disease.isEmpty())
-            LWW->setwekadata(wekaBuffer);
+            LWW << wekaBuffer;
     }
     while(!wekaBuffer.disease.isEmpty())
     {
@@ -842,8 +895,9 @@ void EKGWindow::WekaDo()
         wekaBuffer = readSignal( signal_info, record , SigTime , 0);
         startTime += TIMEREPEAT;
         if (!wekaBuffer.disease.isEmpty())
-            LWW->setwekadata(wekaBuffer);
+            LWW << wekaBuffer;
     }
+    update();
     fileProgress->setValue(100);
 }
 void EKGWindow::Info_Box()
@@ -893,9 +947,17 @@ void EKGWindow::Info_Box()
     createInfo("RR:",localFeature.RR_interval);
     box_layout->addWidget(fWidget,i/3,i%3);
     i++;
-    startButton = new GButton(GButton::Green,"Start");
-    box_layout->addWidget(startButton,i/3,i%3);
+    createInfo("Disease:",localWeka.disease);
+    box_layout->addWidget(fWidget,i/3,i%3);
     i++;
+
+    TimeButton = new GButton(GButton::Red,"Set Time");
+    RecordButton = new GButton(GButton::Orenge,"Open Record");
+    startButton = new GButton(GButton::Green,"Start");
+
+    connect(startButton,SIGNAL(click()),this,SLOT(Detection_Click()));
+    connect(RecordButton,SIGNAL(click()),this,SLOT(openRecord()));
+    connect(TimeButton,SIGNAL(click()),this,SLOT(setSigTime()));
 
     box_layout->addWidget(TimeButton,i/3,i%3);
     i++;
@@ -903,7 +965,7 @@ void EKGWindow::Info_Box()
     box_layout->addWidget(RecordButton,i/3,i%3);
     i++;
 
-    box_layout->addWidget(DBButton,i/3,i%3);
+    box_layout->addWidget(startButton,i/3,i%3);
     i++;
 
     box_layout->setVerticalSpacing(5);
@@ -954,8 +1016,8 @@ void EKGWindow::OpenError(char *recornNum)
 {
     QString strm="Could not open signal number ";
     strm+=recornNum;
-    strm+=".";
-    strm+="\nNo such signal in database. ";
+    strm+=" !";
+    strm+="\nPlease Check .hea and .dat of signal File ";
     Wraning(strm);
 }
 vector<QString> EKGWindow::getFiles(char *patch)
@@ -1097,23 +1159,3 @@ QStringList EKGWindow::AddRecordFile(QString patch)
     }
     return files;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
