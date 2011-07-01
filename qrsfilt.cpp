@@ -109,7 +109,7 @@ int lpfilt( int datum ,int init)
 	y1 = y0;
 	output = y0 / ((LPBUFFER_LGTH*LPBUFFER_LGTH)/4);
 	data[ptr] = datum ;			// Stick most recent sample into
-	if(++ptr == LPBUFFER_LGTH)	// the circular buffer and update
+	if(++ptr == LPBUFFER_LGTH)	// the circular buffer && update
 		ptr = 0 ;					// the buffer pointer.
 	return(output) ;
 	}

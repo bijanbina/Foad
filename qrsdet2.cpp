@@ -57,8 +57,6 @@ Returns:
 ****************************************************************/
 #include "qrsdet.h"
 
-
-
 // External Prototypes.
 
 int QRSFilter(int datum, int init) ;
