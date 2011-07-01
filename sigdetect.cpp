@@ -5,6 +5,14 @@ SigDetect::SigDetect(vector<double> signal , bool getPlot , QwtPlot *plotwidget 
     MainSig = signal;
     buffer = signal;
 
+    QFeuture InitalizeData;
+    InitalizeData.detect = NOTDETECTED;
+    InitalizeData.end = 0;
+    InitalizeData.height = 0;
+    InitalizeData.start = 0;
+    InitalizeData.voltage = 0;
+    InitalizeData.width = 0;
+
     sigInfo.qs.detect = NOTDETECTED;
     sigInfo.p = vector<QFeuture> (0);
     sigInfo.q.detect = NOTDETECTED;
@@ -670,7 +678,7 @@ bool SigDetect::findP()
 bool SigDetect::findT()
 {
     int PMax = MAX();
-    vector<double> bufferList(8);
+    vector<double> bufferList(8,0);
     if(PMax + bufferList.size() > buffer.size())
         PMax = buffer.size() - bufferList.size();
     if(PMax < 8)
@@ -701,8 +709,8 @@ bool SigDetect::findT()
     }
     i = PMax;
     //Add 7 sample before i to bufferList
-    for (int k = 0 ; k < bufferList.size() -1 ; k++)
-        bufferList[k] = buffer[PMax - bufferList.size() + k];
+    for (int k = 0 ; k < bufferList.size() -1; k++)
+        bufferList[k] = buffer[PMax - bufferList.size()+ k];
     while(bufferList.size() < i)
     {
         i--;
@@ -789,7 +797,7 @@ bool SigDetect::AllDetected()
 double SigDetect::getLine(vector<double> fbuffer)
 {
     double sMin = 0;
-    double s;
+    double s = 0;
     for ( int i = 0 ; i < fbuffer.size();i++)
     {
         s += fbuffer[i];
@@ -987,7 +995,7 @@ void SigDetect::gussian(int reduce)
 vector<double> SigDetect::fastSmooth(vector<double> input , int width)
 {
     int SumPoints = width * (width +1);
-    vector<double> s (input.size());
+    vector<double> s (input.size(),0);
     int halfw = width/2;
     int L= input.size();
     for (int k = 1 ; k <= L- width;k++)
