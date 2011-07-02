@@ -1,5 +1,4 @@
 #include "ekgwindow.h"
-#include "inputs.h"	/* list of records to analyze and definitions of ECG_DB_PATH and REC_COUNT */
 
 /*--------------------------------------------------------------------------------------------
 |                                         PLOT                                               |

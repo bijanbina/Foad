@@ -46,7 +46,6 @@ HEADERS += \
     qrsdet.h \
     postclas.h \
     match.h \
-    inputs.h \
     ecgcodes.h \
     bdac.h \
     analbeat.h \
