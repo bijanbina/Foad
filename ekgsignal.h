@@ -17,7 +17,6 @@ private:
     WFDB_Siginfo sigInfo;
     ///
     double beatcount;
-    BeatDetection *LocalBDAC;
     QRSDetection *LocalDetector;
     int InputFileSampleFrequency;
     int EKG_age ,ADCZero ,ADCUnit;

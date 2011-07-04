@@ -40,7 +40,6 @@ void EKGWindow::plot(double *Signal,double *Detect ,int size)
     Signal_curves = new QwtPlotCurve("Signal");
     Detect_curves = new QwtPlotCurve("Detect");
     //--------------- Preparing -----------------
-    //zoomer->zoom(0);
     myPlot->setTitle("EKG Signal");
     myPlot->setAxisTitle(myPlot->xBottom, "Time (s)");
     myPlot->setAxisTitle(myPlot->yLeft, "Voltage");
@@ -173,8 +172,6 @@ void EKGWindow::sCurve()
 ---------------------------------------------------------------------------------------------*/
 EKGWindow::EKGWindow(QWidget *parent) :QMainWindow(parent)
 {
-    //Create Object
-    LocalDetector = getDetector();
     //Logger
     numbers = new QPushButton;
     //ADD Menu
@@ -241,7 +238,7 @@ EKGWindow::EKGWindow(QWidget *parent) :QMainWindow(parent)
     mode = 1;
     DB_Path = "DB";
     SigTime = 60;
-    SigRecord = "100";
+    SigRecord = "04015";
     EKG_age = 30;
     localFeature.P_amp = 0;
     localFeature.Q_amp = 0;
@@ -634,94 +631,58 @@ weka_data EKGWindow::readSignal(WFDB_Siginfo signal_info ,char *record , int tim
                                 , int Starttime , bool getPlot, bool getIntercept)
 {
     //----------------------Variable------------------------
+    localInfo = vector<Ekg_Data> ();
+    int BufferSize = time * SAMPLE_RATE , ecg[2];
+    double signal[BufferSize],detected[BufferSize];
+    long SampleCount = 0;
     weka_data bad;//Use When Read Signal
     bad.disease = "";
-    LocalBDAC = new BeatDetection();
-    localInfo = vector<Ekg_Data> ();
-    time += 8; // For Learning QRS Detection
-    int BufferSize = time * SAMPLE_RATE , ecg[2], delay , delaycount = 0,beatType, beatMatch;
-    double signal[BufferSize],Ddetect_sig[BufferSize];
-    vector<double> detect_sig(BufferSize);
-    vector<EkgSig> Sig_Arr(0);
-    EkgSig listBuffer;
-    long SampleCount = 0, lTemp, DetectionTime ;
+    vector<EkgComplex> Sig_Arr;
     //--------------Rading Signal Attributes----------------
     ADCZero = signal_info.adczero ;
     ADCUnit = signal_info.gain ;
     InputFileSampleFrequency = sampfreq(record) ;
     //------------------Set Output Setting------------------
-    time = time * SAMPLE_RATE;
     Starttime = Starttime * SAMPLE_RATE;
     //-------------------------Initialize-------------------
     NextSample(ecg,2,InputFileSampleFrequency,SAMPLE_RATE,true) ;
-    LocalBDAC->ResetBDAC() ;
     SampleCount = 0 ;
     int SampleNumber = 0;
-    double kgh  = time;
+    double kgh  = BufferSize;
     //-------------------Progress Bar-----------------------
     Percentage += (kgh / signal_info.nsamp) * 190.0;
     double percentageBuffer = (kgh / signal_info.nsamp) * 1.9;
     filePercentage += FileMarhale * percentageBuffer;
     //--------------------Start Reading Signal--------------
-    while((NextSample(ecg,2,InputFileSampleFrequency,SAMPLE_RATE,false) >= 0) && (SampleCount < time))
+    while((NextSample(ecg,2,InputFileSampleFrequency,SAMPLE_RATE,false) >= 0) && (SampleCount < BufferSize))
     {
         SampleNumber++;
         if (SampleNumber >= Starttime )
         {
-            // Set baseline to 0 and resolution to 5 mV/lsb (200 units/mV)
-            lTemp = ecg[0] - ADCZero ;
-            lTemp *= SAMPLE_RATE;
+            ecg[0] -= ADCZero ;
+            ecg[0] *= SAMPLE_RATE;
             if (ADCUnit != 0)
-                lTemp /= ADCUnit ;
+                ecg[0] /= ADCUnit ;
             else
-                lTemp /= WFDB_DEFGAIN ;
-            ecg[0] = lTemp ;
+                ecg[0] /= WFDB_DEFGAIN ;
             signal[SampleCount] = ecg[0] ;
-            // Pass sample to beat detection and classification.
-            delay = LocalBDAC->BeatDetectAndClassify(ecg[0], &beatType, &beatMatch) ;
             SampleCount++;
-            if(delay != 0)
-            {
-                delaycount++;
-                DetectionTime = SampleCount - delay ;
-                //Add Shift
-                DetectionTime += EKG_SHIFT;
-                detect_sig[DetectionTime] = 1;
-                if (delaycount > 1)
-                {
-                    listBuffer.start = listBuffer.end;
-                    listBuffer.end = DetectionTime;
-                    Sig_Arr.push_back(listBuffer);
-                }
-                else
-                {
-                    listBuffer.end = DetectionTime;
-                }
-                //Delete Shift
-                DetectionTime -= EKG_SHIFT;
-                // Convert sample count to input file sample
-                // rate.
-                DetectionTime *= InputFileSampleFrequency ;
-                DetectionTime /= SAMPLE_RATE ;
-            }
         }
+        // Reset database after record is done.
     }
     //----------------------Check Signal--------------------
     if(SampleCount < time)
     {
         return bad;
     }
-//------------Copy Detected Vector QRS To an Array------
-    for (int i = 1 ; i < detect_sig.size() ; i++)
-    {
-        Ddetect_sig[i] = detect_sig[i-1];
-    }
-//-------------------find heart beat rate---------------
-    for (int j=0; j < time ; j++)
-    {
-        if (Ddetect_sig[j] == 1)
-            beatcount++;
-    }
+    //09352546793
+    QRSDet localQRSD = QRSDet(signal,BufferSize);
+    vector<double> Detected = localQRSD.getDetected();
+    for(int i = 0;i<Detected.size();i++)
+        detected[i] = Detected[i];
+    //---------------------Create Complex------------------
+    Sig_Arr = localQRSD.getComplex();
+    //---------------------Intercept EKG--------------------
     int ComplexID = -1;
     vector<double> Complex;
     if (getIntercept)
@@ -744,7 +705,7 @@ weka_data EKGWindow::readSignal(WFDB_Siginfo signal_info ,char *record , int tim
         SigDetect localDETECTION = SigDetect(SBFD,false ,interceptPlot,i, EKG_age,Sig_Arr[i].start);
         localInfo.push_back(localDETECTION.getInfo());
     }
-    //If in intercept Mode:
+//If in intercept Mode:
     if (ComplexID != -1)
     {
         r_feature FW (localInfo);
@@ -759,13 +720,8 @@ weka_data EKGWindow::readSignal(WFDB_Siginfo signal_info ,char *record , int tim
 //-------------------Cofigure Plot-------------------
     if (getPlot)
     {
-        double *Psignal = signal;
-        double *PDdetect_sig = Ddetect_sig;
-        Psignal += TRAiNTIME;
-        PDdetect_sig += TRAiNTIME;
-        time -= TRAiNTIME;
 //----------------------Make plot--------------------
-        plot(Psignal,PDdetect_sig,time);
+        plot(signal,detected,BufferSize);
     }
     diseaWriter DizReader(DBbuffer,record);
     weka_data Return = LFE.getWeka();
@@ -871,33 +827,6 @@ void EKGWindow::Detection_Click()
 }
 void EKGWindow::WekaDo()
 {
-    WFDB_Siginfo signal_info;
-    int startTime = 0;
-    //
-    weka_data wekaBuffer;
-    signal_info = OpenSignal(DBbuffer, record);
-    if(signal_info.cksum == -1)
-        return;
-    if(A_Plot_show->isChecked())
-    {
-        fileProgress->setValue(Percentage);
-        DBProgress->setValue(filePercentage);
-        wekaBuffer = readSignal( signal_info, record , SigTime , 0,true);
-        startTime += TIMEREPEAT;
-        if (!wekaBuffer.disease.isEmpty())
-            LWW << wekaBuffer;
-    }
-    while(!wekaBuffer.disease.isEmpty())
-    {
-        fileProgress->setValue(Percentage);
-        DBProgress->setValue(filePercentage);
-        wekaBuffer = readSignal( signal_info, record , SigTime , 0);
-        startTime += TIMEREPEAT;
-        if (!wekaBuffer.disease.isEmpty())
-            LWW << wekaBuffer;
-    }
-    update();
-    fileProgress->setValue(100);
 }
 void EKGWindow::Info_Box()
 {

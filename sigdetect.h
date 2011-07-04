@@ -1,6 +1,6 @@
 #ifndef SIGDETECT_H
 #define SIGDETECT_H
-#include "bdac.h"
+#include "header.h"
 
 //Defines:
 #define DETECTED 1001

@@ -1,25 +1,18 @@
 #ifndef EKGWINDOW_H
 #define EKGWINDOW_H
-#include "ekgnn.h"
+#include "qrsdet.h"
 #define TIMEREPEAT 60
-#define EKG_SHIFT 15
 #define TRAiNTIME 8 * SAMPLE_RATE
 #define WIDTH 800
 #define HEIGHT 720
 #define ASKCOMPLEX false
-struct EkgSig
-{
-    int start;
-    int end;
-};
-
 class EKGWindow : public QMainWindow
 {
     Q_OBJECT
 public:
     explicit EKGWindow(QWidget *parent = 0);
     weka_data readSignal(WFDB_Siginfo signal_info ,char *record , int time
-             ,int Starttime ,bool getPlot=false,  bool getIntercept=false);
+                                    , int Starttime , bool getPlot, bool getIntercept);
     void readScan(vector<double> navar);
 signals:
 
@@ -117,12 +110,10 @@ private:
     wekaWriter LWW;                //Neural Network Train Data Constructor
     ListRW disList;                //Disease List
     char record[20];
-    double beatcount;
     char DBbuffer[100];
     weka_data localWeka;
     vector<double> Signal;
     int ventricularrate();
-    BeatDetection *LocalBDAC;
     SigDetect InterCeptWindow;
     vector<Ekg_Data> localInfo;
     QRSDetection *LocalDetector;

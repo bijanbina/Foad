@@ -693,7 +693,7 @@ bool SigDetect::findT()
         bufferList.erase(bufferList.begin());
         i++;
         Twidth++;
-        if ((getLine(bufferList) > 8 || Miangin(bufferList) > 5) && buffer[i] != DETECTED)
+        if ((getLine(bufferList) > 12 || Miangin(bufferList) > 5) && buffer[i] != DETECTED)
         {
             if (MainSig[i] > MainSig[nMax])
             {
@@ -717,7 +717,7 @@ bool SigDetect::findT()
         Twidth++;
         bufferList.insert(bufferList.begin(),buffer[i - bufferList.size()]);
         bufferList.erase(bufferList.end()-1);
-        if ((getLine(bufferList) > 8 || Miangin(bufferList) > 5) && buffer[i] != DETECTED)
+        if ((getLine(bufferList) > 12 || Miangin(bufferList) > 5) && buffer[i] != DETECTED)
         {
             buffer[i] = DETECTED;
             if (MainSig[i] > MainSig[nMax])
