@@ -14,6 +14,7 @@ class QRSDet
 {
 public:
     QRSDet(double *array , int size);
+    QRSDet(vector<double> array);
     vector<double> getDetected();
     vector<double> getFilter();
     vector<EkgComplex> getComplex();

@@ -26,7 +26,9 @@ private:
     bool   isblack(QColor color);
     int    isColor(QColor color);
     void   destroyGrid(QColor color);
-    QColor getRow(int row);
+    int    getRow(int row);
+    vector<QImage> VSegmentation(QImage input);
+    vector<QImage> HSegmentation(QImage input);
     QColor getColumn(int Column);
     QImage scanImage;
     vector<double> bSignal;

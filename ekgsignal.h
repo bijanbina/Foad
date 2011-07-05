@@ -4,20 +4,22 @@
 class EKGSignal
 {
 public:
-    EKGSignal(QString path);
-    bool open(int record);
-    bool read(int time , int startTime = 0);
+    EKGSignal();
+    void setDB(QString path);
+    char *getDB();
+    char *getRecord();
+    bool open(QString record);
+    bool read(int time , int Starttime = 0);
+    vector<double> getSignal();
 private:
-    int gcd(int x, int y);
     int NextSample(int *vout,int nosig,int ifreq, int ofreq,bool init);
+    int gcd(int x, int y);
     char RecordNumber[10];
     char DB[100];
-    int sigTime;
     bool exist;
     WFDB_Siginfo sigInfo;
+    vector<double> signal;
     ///
-    double beatcount;
-    QRSDetection *LocalDetector;
     int InputFileSampleFrequency;
     int EKG_age ,ADCZero ,ADCUnit;
 };

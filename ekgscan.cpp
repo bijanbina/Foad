@@ -11,6 +11,7 @@ void EkgScan::scan()
     QTransform imageCorrector;
     imageCorrector = imageCorrector.rotate(-90);
     scanImage = scanImage.transformed(imageCorrector,Qt::SmoothTransformation);
+    scanImage.save("scan.tiff");
     bSignal = proccessor();
 }
 void EkgScan::loadPic(QString path)
@@ -18,27 +19,21 @@ void EkgScan::loadPic(QString path)
     scanImage = QImage(path);
     bSignal = proccessor();
 }
-QColor EkgScan::getRow(int row)
+int EkgScan::getRow(int row)
 {
-    int red = 0,blue = 0 ,green = 0 , width = 0;
-    //Jam tamam rank haye yek satr
+    //Mohasbe Darsad pixel haye rangi dar satr i
+    double darsad;
+    double width = 0;
     for(int i = 0 ; i < scanImage.width() ; i++)
     {
         if(isColor(QColor(scanImage.pixel(i,row))) > 50)
         {
-            red += QColor(scanImage.pixel(i,row)).red();
-            blue += QColor(scanImage.pixel(i,row)).blue();
-            green += QColor(scanImage.pixel(i,row)).green();
             width++;
         }
     }
-    if (width == 0)
-        width = 1;
-    red /= width;
-    blue /= width;
-    green /= width;
-    QColor returnBuffer = QColor(red,blue,green);
-    return returnBuffer;
+    darsad = width / scanImage.width();
+    darsad *= 100;
+    return darsad;
 }
 int EkgScan::isColor(QColor color)
 {
@@ -78,20 +73,17 @@ vector<double> EkgScan::proccessor()
 
     for (i = 0 ; i < scanImage.height();i++)
     {
-        QColor Buffer = getRow(i);
-        int jam = Buffer.red() + Buffer.blue() + Buffer.green();
-        if (jam > 50)
+        if (getRow(i) > 10)
             break;
     }
     scanImage = scanImage.copy(0,i,scanImage.width(),scanImage.height()-i);
     for (i = scanImage.height() - 1 ; i > 0 ; i--)
     {
-        QColor Buffer = getRow(i);
-        int jam = Buffer.red() + Buffer.blue() + Buffer.green();
-        if (jam > 50)
+        if (getRow(i) > 10)
             break;
     }
     scanImage = scanImage.copy(0,0,scanImage.width(),i);
+    scanImage.save("bijan.tiff");
     //End Find Grid
 
     //Destroy Grid
@@ -156,9 +148,9 @@ vector<double> EkgScan::proccessor()
     //End Ghate ghate kardan Signal
 
     //Read Signal
-    int j = maxCount.size()-1;
+    int j = ghataat.size()-1;
     int vBuffer = ghataat[j].height() - maxCount[j];
-    int nBuffer = ghataat[j].height() - maxCount[j];
+    int nBuffer = vBuffer;
     for (int column = 0 ; column < ghataat[j].width() ; column++)
     {
         nBuffer = findNazdik(column,vBuffer,ghataat[j]);
@@ -168,58 +160,56 @@ vector<double> EkgScan::proccessor()
             bSignal.push_back(vBuffer);
             //Chech End Signal
             nBuffer = ghataat[j].height() - vBuffer;
-            //if (endSignal(ghataat[j].copy(column,nBuffer - (endSignalWidth /2), 1 , endSignalWidth)))
-            if (column == 1990)
-            {
-                cout << column << endl;
-                ghataat[j].copy(column,nBuffer - (endSignalWidth /2), 1 , endSignalWidth).save("hi.jpg");
-                break;
-             }
         }
 
     }
     //End Read Signal
 
+    if (bSignal.size() < 300)
+        return bSignal;
     //Delete False
-    long mMin = 0;int mMax = 0;
+    bSignal.erase(bSignal.begin(),bSignal.begin()+100);
+    bSignal.erase(bSignal.end()-100,bSignal.end());
+    //Find Base Line
+    long mMin = 0;int mMax = 0,maingin = 0;
     for(int k = 0 ; k < bSignal.size();k++)
     {
-        mMin += bSignal[k];
+        maingin += bSignal[k];
     }
-    mMin /= bSignal.size();
+    maingin /= bSignal.size();
     for(int k = 0 ; k < bSignal.size();k++)
     {
-        bSignal[k] -= mMin;
+        bSignal[k] -= maingin;
     }
-    int readSize = 200;
-    if (readSize > bSignal.size())
-        readSize = bSignal.size();
+//    int readSize = 200;
+//    if (readSize > bSignal.size())
+//        readSize = bSignal.size();
 
-    mMax = 0 , mMin = 0;
-    for(int i = 0 ; i < readSize ; i++)
-    {
-        if (bSignal[i] > bSignal[mMax])
-            mMax = i;
-        if(bSignal[i] < bSignal[mMin])
-            mMin = i;
-    }
-    double nesbat = 0;
-    if(abs(bSignal[mMin]) > abs(bSignal[mMax]))
-    {
-        nesbat = -300.0 / bSignal[mMin];
-        for(int k = 0 ; k < bSignal.size();k++)
-        {
-            bSignal[k] *= nesbat;
-        }
-    }
-    else
-    {
-        nesbat = 300.0 / bSignal[mMax];
-        for(int k = 0 ; k < bSignal.size();k++)
-        {
-           bSignal[k] *= nesbat;
-        }
-    }
+//    mMax = 0 , mMin = 0;
+//    for(int i = 0 ; i < readSize ; i++)
+//    {
+//        if (bSignal[i] > bSignal[mMax])
+//            mMax = i;
+//        if(bSignal[i] < bSignal[mMin])
+//            mMin = i;
+//    }
+//    double nesbat = 0;
+//    if(abs(bSignal[mMin]) > abs(bSignal[mMax]))
+//    {
+//        nesbat = -300.0 / bSignal[mMin];
+//        for(int k = 0 ; k < bSignal.size();k++)
+//        {
+//            bSignal[k] *= nesbat;
+//        }
+//    }
+//    else
+//    {
+//        nesbat = 300.0 / bSignal[mMax];
+//        for(int k = 0 ; k < bSignal.size();k++)
+//        {
+//           bSignal[k] *= nesbat;
+//        }
+//    }
 
 //    for (int k = 0 ; k < ghataat.size();k++)
 //    {
@@ -271,9 +261,117 @@ bool EkgScan::endSignal(QImage image)
     return false;
 }
 
+vector<QImage> EkgScan::VSegmentation(QImage input)
+{
+    //Crop
+    int red = 0,blue = 0 ,green = 0,realWidth = 0;
+    vector<scanInfo> imageSum(input.width());
+    //fill picture info
+    for(int column = 0 ; column < input.width() ; column++)
+    {
+        red = 0,blue = 0 ,green = 0,realWidth = 0;
+        for(int row = 0 ; row < input.height() ; row++)
+        {
+            QColor color = QColor(input.pixel(column,row));
+            if(color.red() < 200 && color.blue() < 200 && color.blue() < 200)
+            {
+                red += color.red();
+                blue += color.blue();
+                green += color.green();
+                realWidth++;
+            }
+        }
+        if (realWidth == 0)
+            realWidth = 1;
+        red /= realWidth;
+        blue /= realWidth;
+        green /= realWidth;
+        imageSum[column].count = realWidth; imageSum[column].red = red;
+        imageSum[column].blue = blue; imageSum[column].green = green;
+    }
+    //End Fill info
 
+    //Ghate ghate kardan Signal
+    int start = 0,end = 0;
+    vector<QImage> segments;
+    bSignal = vector<double> (0);
+    for(int colomn = 0 ; colomn < input.width() ; colomn++)
+    {
+        if(imageSum[colomn].red != 0 && imageSum[colomn].blue != 0 && imageSum[colomn].green != 0)
+        {
+            start = colomn;
+            while(!(imageSum[colomn].red == 0 && imageSum[colomn].blue == 0 && imageSum[colomn].green == 0) && colomn < input.width())
+            {
+                colomn++;
+            }
+            end = colomn - start;
+            if (end > 2)
+            {
+                segments.push_back(input.copy(0,start,input.height(),end));
+            }
+        }
+        end = 0;
+    }
+    return segments;
+}
 
+vector<QImage> EkgScan::HSegmentation(QImage input)
+{
+    //Crop
+    int red = 0,blue = 0 ,green = 0,realWidth = 0;
+    vector<scanInfo> imageSum(input.height());
+    //fill picture info
+    for(int row = 0 ; row < input.height() ; row++)
+    {
+        red = 0,blue = 0 ,green = 0,realWidth = 0;
+        for(int column = 0 ; column < input.width() ; column++)
+        {
+            QColor color = QColor(input.pixel(column,row));
+            if(color.red() < 200 && color.blue() < 200 && color.blue() < 200)
+            {
+                red += color.red();
+                blue += color.blue();
+                green += color.green();
+                realWidth++;
+            }
+        }
+        if (realWidth == 0)
+            realWidth = 1;
+        red /= realWidth;
+        blue /= realWidth;
+        green /= realWidth;
+        imageSum[row].count = realWidth; imageSum[row].red = red;
+        imageSum[row].blue = blue; imageSum[row].green = green;
+    }
+    //End Fill info
 
+    //Ghate ghate kardan Signal
+    int start = 0,end = 0;
+    vector<QImage> ghataat;
+    bSignal = vector<double> (0);
+    for(int row = 0 ; row < input.height() ; row++)
+    {
+        if(imageSum[row].red != 0 && imageSum[row].blue != 0 && imageSum[row].green != 0)
+        {
+            start = row;
+            int Mmax = 0;
+            while(!(imageSum[row].red == 0 && imageSum[row].blue == 0 && imageSum[row].green == 0) && row < input.height() )
+            {
+                if(imageSum[row].count > imageSum[Mmax].count)
+                    Mmax = row;
+                row++;
+            }
+            end = row - start;
+            if (end > 100)
+            {
+                ghataat.push_back(input.copy(0,start,input.width(),end));
+            }
+        }
+        end = 0;
+    }
+    //End Ghate ghate kardan Signal
+    return ghataat;
+}
 
 
 

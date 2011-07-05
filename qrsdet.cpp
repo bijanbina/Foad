@@ -7,6 +7,11 @@ QRSDet::QRSDet(double *array , int size)
     for(int i = 0; i < size;i++)
         signal[i] = array[i];
 }
+QRSDet::QRSDet(vector<double> array)
+{
+    signal = array;
+    detected = vector<double> (0);
+}
 
 vector<double> QRSDet::getDetected()
 {

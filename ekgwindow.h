@@ -11,9 +11,7 @@ class EKGWindow : public QMainWindow
     Q_OBJECT
 public:
     explicit EKGWindow(QWidget *parent = 0);
-    weka_data readSignal(WFDB_Siginfo signal_info ,char *record , int time
-                                    , int Starttime , bool getPlot, bool getIntercept);
-    void readScan(vector<double> navar);
+    weka_data Intercept(vector<double> sig , bool getPlot = false, bool getIntercept = false);
 signals:
 
 private slots:
@@ -40,7 +38,6 @@ private slots:
 private:
     void WekaDo();
     void Info_Box();
-    int gcd(int x, int y);
     int askComplex(int end);
     void Wraning(QString text);
     void OpenError(char *recordNum);
@@ -53,8 +50,6 @@ private:
     void createInfo(QString name , int value);
     void createInfo(QString name , QString value);
 
-    int  NextSample(int *,int ,int , int ,bool ) ;
-    WFDB_Siginfo OpenSignal(char *DB ,char *record);
     void plot(double *Signal,double *Detect,int size);
     vector<QString> getUnDiz(char *patch, vector<QString> values);
     //Layout
@@ -109,14 +104,12 @@ private:
     EKG_atr localFeature;
     wekaWriter LWW;                //Neural Network Train Data Constructor
     ListRW disList;                //Disease List
-    char record[20];
-    char DBbuffer[100];
     weka_data localWeka;
     vector<double> Signal;
+    EKGSignal sigReader;
     int ventricularrate();
     SigDetect InterCeptWindow;
     vector<Ekg_Data> localInfo;
-    QRSDetection *LocalDetector;
     int InputFileSampleFrequency;
     int EKG_age ,ADCZero ,ADCUnit;
     //Gui
@@ -138,7 +131,6 @@ private:
     GButton *RecordButton;
     //Signal Info
     int SigTime;
-    QString DB_Path;
     QString SigRecord;
     //Scanner
     EkgScan ekgScanner;

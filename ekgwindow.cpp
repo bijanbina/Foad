@@ -236,7 +236,6 @@ EKGWindow::EKGWindow(QWidget *parent) :QMainWindow(parent)
     QAction *A_setAge = EKGMenu->addAction("Set EKG Age");
     //Set Defualt Value
     mode = 1;
-    DB_Path = "DB";
     SigTime = 60;
     SigRecord = "04015";
     EKG_age = 30;
@@ -539,23 +538,24 @@ void EKGWindow::createInfo(QString name , QString value)
 void EKGWindow::scan()
 {
     ekgScanner.scan();
+    Intercept(ekgScanner.getSignal(),true,true);
 }
 void EKGWindow::openImage()
 {
     QString title = "Open Scanned Signal";
     QFileDialog::Options options;
     QString selectedFilter;
-    QString files = QFileDialog::getOpenFileName(this, title,"","Picture (*.png *.jpg)",&selectedFilter,options);
+    QString files = QFileDialog::getOpenFileName(this, title,"","Picture (*.png *.jpg *.tiff)",&selectedFilter,options);
     if(!files.isEmpty())
         ekgScanner.loadPic(files);
-    readScan(ekgScanner.getSignal());
+    Intercept(ekgScanner.getSignal(),true,false);
 }
 void EKGWindow::openRecord()
 {
     QString title = "Open Record";
     QFileDialog::Options options;
     QString selectedFilter;
-    QFileInfo dbFileInfo = QFileInfo(DB_Path);
+    QFileInfo dbFileInfo = QFileInfo(sigReader.getDB());
     QString files = QFileDialog::getOpenFileName(this, title,dbFileInfo.absoluteFilePath(),
                                                  "Record (*.dat)",&selectedFilter,options);
     if(!files.isEmpty())
@@ -578,105 +578,26 @@ void EKGWindow::openTrain()
     }
 }
 /*--------------------------------------------------------------------------------------------
-|                                     Read Signal                                            |
+|                                  Signal Proccessing                                         |
 ---------------------------------------------------------------------------------------------*/
-int EKGWindow::gcd(int x, int y)
-{
-    while (x != y)
-    {
-        if (x > y)
-            x-=y;
-        else
-            y -= x;
-    }
-    return (x);
-}
-int EKGWindow::NextSample(int *vout,int nosig,int ifreq, int ofreq,bool init)
-{
-    int i ;
-    static int m, n, mn, ot, it, vv[WFDB_MAXSIG], v[WFDB_MAXSIG], rval ;
-
-    if(init)
-    {
-        i = gcd(ifreq, ofreq);
-        m = ifreq/i;
-        n = ofreq/i;
-        mn = m*n;
-        ot = it = 0 ;
-        getvec(vv) ;//readsample of the signal
-        rval = getvec(v) ;
-    }
-    else
-    {
-        while(ot > it)
-        {
-            for(i = 0; i < nosig; ++i)
-                vv[i] = v[i] ;
-            rval = getvec(v) ;
-            if (it > mn)
-            {
-                it -= mn;
-                ot -= mn;
-            }
-            it += n;
-        }
-        for( i = 0; i < nosig; i++ )
-            vout[i] = vv[i] + (ot%n)*(v[i]-vv[i])/n;
-        ot += m;
-    }
-
-    return(rval) ;
-}
-weka_data EKGWindow::readSignal(WFDB_Siginfo signal_info ,char *record , int time
-                                , int Starttime , bool getPlot, bool getIntercept)
+weka_data EKGWindow::Intercept(vector<double> sig , bool getPlot, bool getIntercept)
 {
     //----------------------Variable------------------------
     localInfo = vector<Ekg_Data> ();
-    int BufferSize = time * SAMPLE_RATE , ecg[2];
+    int BufferSize = sig.size();
     double signal[BufferSize],detected[BufferSize];
-    long SampleCount = 0;
-    weka_data bad;//Use When Read Signal
-    bad.disease = "";
     vector<EkgComplex> Sig_Arr;
-    //--------------Rading Signal Attributes----------------
-    ADCZero = signal_info.adczero ;
-    ADCUnit = signal_info.gain ;
-    InputFileSampleFrequency = sampfreq(record) ;
-    //------------------Set Output Setting------------------
-    Starttime = Starttime * SAMPLE_RATE;
+    //-------------------Copy Signal---------------------
+    for(int i = 0 ; i < BufferSize ; i++)
+        signal[i] = sig[i];
     //-------------------------Initialize-------------------
-    NextSample(ecg,2,InputFileSampleFrequency,SAMPLE_RATE,true) ;
-    SampleCount = 0 ;
-    int SampleNumber = 0;
-    double kgh  = BufferSize;
+    //double kgh  = BufferSize;
     //-------------------Progress Bar-----------------------
-    Percentage += (kgh / signal_info.nsamp) * 190.0;
-    double percentageBuffer = (kgh / signal_info.nsamp) * 1.9;
-    filePercentage += FileMarhale * percentageBuffer;
-    //--------------------Start Reading Signal--------------
-    while((NextSample(ecg,2,InputFileSampleFrequency,SAMPLE_RATE,false) >= 0) && (SampleCount < BufferSize))
-    {
-        SampleNumber++;
-        if (SampleNumber >= Starttime )
-        {
-            ecg[0] -= ADCZero ;
-            ecg[0] *= SAMPLE_RATE;
-            if (ADCUnit != 0)
-                ecg[0] /= ADCUnit ;
-            else
-                ecg[0] /= WFDB_DEFGAIN ;
-            signal[SampleCount] = ecg[0] ;
-            SampleCount++;
-        }
-        // Reset database after record is done.
-    }
-    //----------------------Check Signal--------------------
-    if(SampleCount < time)
-    {
-        return bad;
-    }
-    //09352546793
-    QRSDet localQRSD = QRSDet(signal,BufferSize);
+    //Percentage += (kgh / signal_info.nsamp) * 190.0;
+    //double percentageBuffer = (kgh / signal_info.nsamp) * 1.9;
+    //filePercentage += FileMarhale * percentageBuffer;
+    //------------------R Detection Start-------------------
+    QRSDet localQRSD = QRSDet(sig);
     vector<double> Detected = localQRSD.getDetected();
     for(int i = 0;i<Detected.size();i++)
         detected[i] = Detected[i];
@@ -713,84 +634,39 @@ weka_data EKGWindow::readSignal(WFDB_Siginfo signal_info ,char *record , int tim
         InterCeptWindow = SigDetect(Complex,true ,interceptPlot,ComplexID, EKG_age,Sig_Arr[ComplexID].start);
     }
     r_feature LFE(localInfo);
-//-------------------Copy Signal---------------------
-    Signal = vector<double> (BufferSize);
-    for(int i = 0 ; i < BufferSize ; i++)
-        Signal[i] = signal[i];
 //-------------------Cofigure Plot-------------------
     if (getPlot)
     {
 //----------------------Make plot--------------------
         plot(signal,detected,BufferSize);
     }
-    diseaWriter DizReader(DBbuffer,record);
+    diseaWriter DizReader(sigReader.getDB(),sigReader.getRecord());
     weka_data Return = LFE.getWeka();
     if (DizReader.isExist())
         Return.disease = DizReader.getDisease();
     localWeka = Return;
-    return Return;
 }
-void EKGWindow::readScan(vector<double> navar)
-{
-    //----------------------Variable------------------------
-    int BufferSize = navar.size();
-    if (BufferSize < 10)
-        return;
-    double signal[BufferSize],Ddetect_sig[BufferSize];
-    //-------------------Copy Signal---------------------
-    for(int i = 0 ; i < BufferSize ; i++)
-    {
-        signal[i] = navar[i];
-        Ddetect_sig[i] = 0;
-    }
-    //-------------------Cofigure Plot-------------------
-    double *Psignal = signal;
-    double *PDdetect_sig = Ddetect_sig;
-    plot(Psignal,PDdetect_sig,BufferSize);
-}
-WFDB_Siginfo EKGWindow::OpenSignal(char *DB ,char *record)
-{
-//----------------------Variable------------------------
-    WFDB_Siginfo signal_info[2] ;
-    signal_info[0].cksum = -1;
-//------------------Configure Database------------------
-    setwfdb(DB) ;
-//----------------------Check Signal--------------------
-    if(isigopen(record,signal_info,2) < 2)
-    {
-        OpenError(record);
-        return signal_info[0];
-    }
-    return signal_info[0];
-}
-/*--------------------------------------------------------------------------------------------
-|                                     Proccessing                                            |
----------------------------------------------------------------------------------------------*/
 void EKGWindow::Detection_Click()
 {
-    //------------------Variable--------------------
-    WFDB_Siginfo signal_info;
-    //Bijoo
-    strcpy(record, SigRecord.toStdString().c_str());
-    //----------- Create Database Patch ------------
-    strcpy(DBbuffer , DB_Path.toStdString().c_str());
     if (mode == 1)
     {
-        signal_info = OpenSignal(DBbuffer, record);
-        if (signal_info.cksum == -1)
+        if (!sigReader.open(SigRecord))
+            return;
+        if (!sigReader.read(SigTime))
             return;
         interceptPlot = new QwtPlot;
         interceptPlot->canvas()->setFrameStyle(0);
         interceptPlot->setTitle("Intercept Plot");
-        readSignal( signal_info, record , SigTime , 0,true,true);
+        Signal = sigReader.getSignal();
+        Intercept(Signal,true,true);
         CreateLayout(0);
     }
     if (mode == 2)
     {
         Percentage = 0;
         vector<QString> FileList;
-        FileList = getFiles(DBbuffer);
-        FileList = getUnDiz(DBbuffer,FileList);
+        FileList = getFiles(sigReader.getDB());
+        FileList = getUnDiz(sigReader.getDB(),FileList);
         double marhale = 100.0 / FileList.size();
         for(int i = 0 ; i < FileList.size();i++)
         {
@@ -798,7 +674,7 @@ void EKGWindow::Detection_Click()
             QString DizBuffer = askDiz(FileList[i].toStdString().c_str());
             if(!DizBuffer.isEmpty())
             {
-                diseaWriter buffer(DBbuffer,FileList[i].toStdString().c_str()) ;
+                diseaWriter buffer(sigReader.getDB(),FileList[i].toStdString().c_str()) ;
                 buffer.setDisease(DizBuffer);
             }
             Percentage += marhale;
@@ -807,17 +683,16 @@ void EKGWindow::Detection_Click()
     }
     if(mode==3)
     {
-        QStringList selectedRecord = AddRecordFile(DB_Path);
+        QStringList selectedRecord = AddRecordFile(sigReader.getDB());
         FileMarhale =  100.0 / double(selectedRecord.count());
         filePercentage = 0;
-        vector<QString> just = disList.getList();
         LWW.setDiseaseList(disList.getList());
         for (int k = 0 ; k < selectedRecord.count();k++)
         {
             filePercentage = double(k) * FileMarhale;
             DBProgress->setValue(filePercentage);
             Percentage = 0;
-            strcpy(record, selectedRecord[k].toStdString().c_str());
+            SigRecord = selectedRecord[k];
             WekaDo();
         }
         //----------------Set File Name--------------------
@@ -827,13 +702,39 @@ void EKGWindow::Detection_Click()
 }
 void EKGWindow::WekaDo()
 {
+    weka_data wekaBuffer;
+    if (!sigReader.open(SigRecord))
+        return;
+    if(A_Plot_show->isChecked())
+    {
+        fileProgress->setValue(Percentage);
+        DBProgress->setValue(filePercentage);
+        if (sigReader.read(SigTime))
+        {
+            Signal = sigReader.getSignal();
+            wekaBuffer = Intercept(Signal,true);
+            LWW << wekaBuffer;
+        }
+    }
+    while(!wekaBuffer.disease.isEmpty())
+    {
+        fileProgress->setValue(Percentage);
+        DBProgress->setValue(filePercentage);
+        if (!sigReader.read(SigTime))
+            break;
+        Signal = sigReader.getSignal();
+        wekaBuffer = Intercept(Signal);
+        LWW << wekaBuffer;
+    }
+    update();
+    fileProgress->setValue(100);
 }
 void EKGWindow::Info_Box()
 {
     BoxWidget = new QWidget;
     QGridLayout *box_layout = new QGridLayout;
     int i = 0;
-    createInfo("Record Number:",SigRecord);
+    createInfo("Record:",SigRecord);
     box_layout->addWidget(fWidget,i/3,i%3);
     i++;
     createInfo("Signal Time:",SigTime);
@@ -900,14 +801,13 @@ void EKGWindow::Info_Box()
     BoxWidget->setLayout(box_layout);
 }
 /*--------------------------------------------------------------------------------------------
-|                                   Menu And Signal                                          |
+|                                   Menu And Dialog                                          |
 ---------------------------------------------------------------------------------------------*/
 void EKGWindow::setDB_Path()
 {
-    bool ok;
-    QString buffer = QInputDialog::getText(this,"DataBase Set Path","DataBase Path", QLineEdit::Normal,DB_Path, &ok);
-    if (ok && !buffer.isEmpty())
-        DB_Path = buffer;
+    QString buffer = QFileDialog::getExistingDirectory(this,"DataBase Set Path",sigReader.getDB());
+    if (!buffer.isEmpty())
+        sigReader.setDB(buffer);
 }
 void EKGWindow::setRecordNum()
 {
