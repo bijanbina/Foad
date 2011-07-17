@@ -46,6 +46,7 @@ bool EKGSignal::open(QString record)
     }
     sigInfo = signal_info[0];
     exist = true;
+    return true;
 }
 bool EKGSignal::read(int time , int Starttime)
 {
@@ -90,6 +91,10 @@ vector<double> EKGSignal::getSignal()
     return signal;
 }
 
+long int EKGSignal::nsamp()
+{
+    return sigInfo.nsamp;
+}
 
 int EKGSignal::NextSample(int *vout,int nosig,int ifreq, int ofreq,bool init)
 {

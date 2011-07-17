@@ -1,4 +1,3 @@
-#include <QtGui/QApplication>
 #include "ekgwindow.h"
 
 int main(int argc, char *argv[])

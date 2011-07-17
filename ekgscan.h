@@ -1,37 +1,27 @@
 #ifndef EKGSCAN_H
 #define EKGSCAN_H
-#include "GButton.h"
+#include "ekgimagep.h"
 
-#define endSignalWidth 100
 
-struct scanInfo
+class EkgScan : public QThread
 {
-    int count;
-    int red;
-    int blue;
-    int green;
-};
-
-class EkgScan
-{
+    Q_OBJECT
 public:
-    EkgScan();
-    void scan();
-    vector<double> proccessor();
-    vector<double> getSignal();
-    int findNazdik(int coloumn , int value , QImage image );
-    void loadPic(QString path);
-    bool endSignal(QImage image);
+                      EkgScan(QObject *parent = 0);
+    void              run();
+    bool              selDevice();
+signals:
+    void ScanFinished();
+public slots:
+    void imageReady();
+
+
 private:
-    bool   isblack(QColor color);
-    int    isColor(QColor color);
-    void   destroyGrid(QColor color);
-    int    getRow(int row);
-    vector<QImage> VSegmentation(QImage input);
-    vector<QImage> HSegmentation(QImage input);
-    QColor getColumn(int Column);
-    QImage scanImage;
-    vector<double> bSignal;
+    QImage            scanImage;
+    QString           device;
+    QString           Command;
+    KSaneWidget      *saneWidget;
+    EKGframeWork      GlobeEKG;
 };
 
 #endif // EKGSCAN_H

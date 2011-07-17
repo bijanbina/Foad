@@ -4,7 +4,7 @@
 */
 #ifndef EKGNN_H
 #define EKGNN_H
-#include "ekgscan.h"
+#include "qscan.h"
 class EKGNN
 {
 public:

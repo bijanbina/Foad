@@ -109,10 +109,10 @@ SigDetect::SigDetect(vector<double> signal , bool getPlot , QwtPlot *plotwidget 
             Msignal[i] = MainSig[i];
         }
         //Plot buffer and Main sig;
-        plot(Msignal,Psignal,buffer.size());
+        plot(Msignal,buffer.size());
     }
 }
-void SigDetect::plot(double *Signal,double *Detect ,int size)
+void SigDetect::plot(double *Signal ,int size)
 {
     myPlot->clear();
     myPlot->plotLayout()->setAlignCanvasToScales(true);
@@ -122,7 +122,6 @@ void SigDetect::plot(double *Signal,double *Detect ,int size)
     {
         x[i] = s;
         s +=0.005;
-        //s++;
     }
     //--------------EKG Grid Line-----------------
     EKG_Grid->enableXMin(true);
@@ -135,27 +134,23 @@ void SigDetect::plot(double *Signal,double *Detect ,int size)
 
     //--------------- Add Curves ----------------
     Signal_curves = new QwtPlotCurve("Signal");
-    Detect_curves = new QwtPlotCurve("Detect");
 
     //--------------- Preparing -----------------
     zoomer->zoom(0);
     myPlot->setAxisTitle(myPlot->xBottom, "Time (s)");
     myPlot->setAxisTitle(myPlot->yLeft, "Voltage");
     Signal_curves->setRenderHint(QwtPlotItem::RenderAntialiased);
-    Detect_curves->setRenderHint(QwtPlotItem::RenderAntialiased);
 
     // ------copy the data into the curves-----------
     Signal_curves->setData(x,Signal,size);
-    Detect_curves->setData(x,Detect,size);
+    //--------------- Attach Curves ----------------
+    Signal_curves->attach(myPlot);
     // ADD Finded Feutures
     qCurve();
     rCurve();
     sCurve();
     pCurve();
     tCurve();
-    //--------------- Attach Curves ----------------
-    Signal_curves->attach(myPlot);
-    Detect_curves->attach(myPlot);
     //-----------------Set pen-----------------------
     QPen *ekgPen = new QPen(Qt::blue);
     ekgPen->setWidthF(0.5);
@@ -669,6 +664,8 @@ bool SigDetect::findP()
         QFeuture Pbuffer;
         Pbuffer.detect = PStart + (Pwidth / 2);
         Pbuffer.voltage = MainSig[Pbuffer.detect];
+        Pbuffer.start = PStart;
+        Pbuffer.end = Pend;
         sigInfo.p.push_back(Pbuffer);
         //sigInfo.p = nMax;
         return true;
@@ -693,7 +690,8 @@ bool SigDetect::findT()
         bufferList.erase(bufferList.begin());
         i++;
         Twidth++;
-        if ((getLine(bufferList) > 12 || Miangin(bufferList) > 5) && buffer[i] != DETECTED)
+        if ((getLine(bufferList) > 12 || Miangin(bufferList) > 10) &&
+                (getShib(bufferList) <= 0 || Miangin(bufferList) > 10) && buffer[i] != DETECTED)
         {
             if (MainSig[i] > MainSig[nMax])
             {
@@ -717,7 +715,8 @@ bool SigDetect::findT()
         Twidth++;
         bufferList.insert(bufferList.begin(),buffer[i - bufferList.size()]);
         bufferList.erase(bufferList.end()-1);
-        if ((getLine(bufferList) > 12 || Miangin(bufferList) > 5) && buffer[i] != DETECTED)
+        if ((getLine(bufferList) > 12 || Miangin(bufferList) > 10) &&
+                (getShib(bufferList) >= 0 || Miangin(bufferList) > 10) && buffer[i] != DETECTED)
         {
             buffer[i] = DETECTED;
             if (MainSig[i] > MainSig[nMax])
@@ -745,6 +744,8 @@ bool SigDetect::findT()
         if (Tend > PT)
         sigInfo.t.detect = nMax;
         sigInfo.t.voltage = MainSig[sigInfo.t.detect];
+        sigInfo.t.start = TStart;
+        sigInfo.t.end = Tend;
         return true;
     }
     //If Detected T is false this code run!
@@ -908,6 +909,7 @@ void SigDetect::sCurve()
 }
 void SigDetect::pCurve()
 {
+    pBold_curves = new QwtPlotCurve;
     p_curves = new QwtPlotCurve;
     //Calculate S place
     if (sigInfo.Pcount == 1)
@@ -929,16 +931,35 @@ void SigDetect::pCurve()
         sym.setSize(8);
         p_curves->setSymbol(sym);
         p_curves->setStyle(QwtPlotCurve::NoCurve);
+        //------------ Bold T Duration ----------------
+        int size = sigInfo.p[0].end - sigInfo.p[0].start + 1;
+        double Xbold[size];
+        double Ybold[size];
+        for (int i = sigInfo.p[0].start; i <= sigInfo.p[0].end;i++)
+        {
+            Xbold[i - sigInfo.p[0].start] = i / 200.0;
+            Ybold[i - sigInfo.p[0].start] = MainSig[i];
+        }
+        //-----------------Set pen-----------------------
+        pBold_curves->setRenderHint(QwtPlotItem::RenderAntialiased);
+        QPen ekgPen = QPen(Qt::red);
+        ekgPen.setWidthF(2);
+        ekgPen.setJoinStyle(Qt::RoundJoin);
+        ekgPen.setCapStyle(Qt::RoundCap);
+        pBold_curves->setPen(ekgPen);
         // ------copy the data into the curves-----------
         p_curves->setData(x,y,1);
+        pBold_curves->setData(Xbold,Ybold,size);
         //--------------- Attach Curves ----------------
         p_curves->attach(myPlot);
+        pBold_curves->attach(myPlot);
     }
 
 }
 void SigDetect::tCurve()
 {
     t_curves = new QwtPlotCurve;
+    tBold_curves = new QwtPlotCurve;
     //Calculate T place
     int M = sigInfo.t.detect;
     if (M != -1)
@@ -956,10 +977,28 @@ void SigDetect::tCurve()
         sym.setSize(8);
         t_curves->setSymbol(sym);
         t_curves->setStyle(QwtPlotCurve::NoCurve);
+        //------------ Bold T Duration ----------------
+        int size = sigInfo.t.end - sigInfo.t.start + 1;
+        double Xbold[size];
+        double Ybold[size];
+        for (int i = sigInfo.t.start; i <= sigInfo.t.end;i++)
+        {
+            Xbold[i - sigInfo.t.start] = i / 200.0;
+            Ybold[i - sigInfo.t.start] = MainSig[i];
+        }
+        //-----------------Set pen-----------------------
+        tBold_curves->setRenderHint(QwtPlotItem::RenderAntialiased);
+        QPen ekgPen = QPen(Qt::black);
+        ekgPen.setWidthF(2);
+        ekgPen.setJoinStyle(Qt::RoundJoin);
+        ekgPen.setCapStyle(Qt::RoundCap);
+        tBold_curves->setPen(ekgPen);
         // ------copy the data into the curves-----------
         t_curves->setData(x,y,1);
+        tBold_curves->setData(Xbold,Ybold,size);
         //--------------- Attach Curves ----------------
         t_curves->attach(myPlot);
+        tBold_curves->attach(myPlot);
     }
 }
 //----------------------------------DETECTED Functions-----------------------------------
@@ -1017,107 +1056,21 @@ vector<double> SigDetect::fastSmooth(vector<double> input , int width)
     }
     return s;
 }
-//bool SigDetect::findT()
-//{
-//    //TPrepare();
-//    //------------Find Max-------------
-//    vector<double> TBuffer = buffer;
-//    //Pow2();
-//    int PMax = MAX();
-//    buffer = TBuffer;
-//    //--------Define Variable----------
-//    vector<double> bufferList(8);
-
-//    //DEBUG
-//    if(PMax + bufferList.size() > buffer.size())
-//        PMax = buffer.size() - bufferList.size();
-//    if(PMax < 8)
-//        PMax = bufferList.size();
-//    //END Bug
-
-//    int nMax = PMax , minT = 0;
-//    int i = PMax - 1 , Twidth = 0 , TStart = 0 , Tend = 0, Theight = 0;
-//    //Add 7 sample after i to bufferList
-//    for (int k = 1 ; k < bufferList.size() ; k++)
-//        bufferList[k] = buffer[PMax + k];
-//    //-----------Find Width------------
-//    while(i < buffer.size() - bufferList.size())
-//    {
-//        i++;
-//        Twidth++;
-//        bufferList.push_back(buffer[i+bufferList.size()]);
-//        bufferList.erase(bufferList.begin());
-//        if ((getLine(bufferList) > 12 || Miangin(bufferList) > 10) && buffer[i] != DETECTED)
-//        {
-//            if (MainSig[i] > MainSig[nMax])
-//            {
-//                nMax = i;
-//            }
-//            buffer[i] = DETECTED;
-//        }
-//        else
-//        {
-//            Tend = i;
-//            break;
-//        }
-//    }
-//    i = PMax;
-//    //Add 7 sample before i to bufferList
-//    for (int k = 0 ; k < bufferList.size() -1 ; k++)
-//        bufferList[k] = buffer[PMax - bufferList.size() + k];
-//    while(bufferList.size() < i)
-//    {
-//        i--;
-//        Twidth++;
-//        bufferList.insert(bufferList.begin(),buffer[i - bufferList.size()]);
-//        bufferList.erase(bufferList.end()-1);
-//        if ((getLine(bufferList) > 12 || Miangin(bufferList) > 10) && buffer[i] != DETECTED)
-//        {
-//            buffer[i] = DETECTED;
-//            if (MainSig[i] > MainSig[nMax])
-//            {
-//                nMax = i;
-//            }
-//        }
-//        else
-//        {
-//            TStart = i;
-//            break;
-//        }
-//    }
-//    //Find Min of T
-//    if (MainSig[TStart] < MainSig[Tend])
-//        minT = TStart;
-//    else
-//        minT = Tend;
-//    //Find T Height
-//    Theight = abs(MainSig[nMax] - MainSig[minT]);
-//    //Check that the dected T is Real?
-//    double PT = 3.0/8.0;
-//    if (Theight >= 10 && Twidth > 10)
-//    {
-//        if (Tend > PT)
-//        sigInfo.t.detect = nMax;
-//        sigInfo.t.voltage = MainSig[sigInfo.t.detect];
-//        for (i = 0 ; i < PT * buffer.size();i++)
-//        {
-//            buffer[i] = DETECTED;
-//        }
-//        for (i = sigInfo.t.detect + 10 ; 0 <= i;i--)
-//        {
-//            buffer[i] = DETECTED;
-//        }
-//        return true;
-//    }
-//    //If Detected T is false this code run!
-//    return false;
-//}
-
-
-
-
-
-
+//---------------------------------Geometry Functions----------------------------------
+double SigDetect::getShib(double point1,double point2)
+{
+    return atan(point2 - point1);
+}
+double SigDetect::getShib(vector<double> fbuffer)
+{
+    double s = 0;
+    for(int i = 1;i<fbuffer.size();i++)
+    {
+        s += getShib(fbuffer[i-1],fbuffer[i]);
+    }
+    s /= fbuffer.size() -1;
+    return s;
+}
 
 
 

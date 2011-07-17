@@ -23,7 +23,7 @@ with this library; if not, write to the Free Software Foundation, Inc., 59
 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 You may contact the author by e-mail (bijan@binaee.ir) or postal mail
-(Iran Tehran Tehran Jahan Ara ST 23th , pelak : 47 secon floor).  For updates to this software, please visit our website
+(Iran Tehran Tehran Jahan Ara ST 23th , pelak : 47 second floor).  For updates to this software, please visit our website
 (http://www.binaee.ir).
   __________________________________________________________________________
   Revisions:
@@ -35,11 +35,13 @@ You may contact the author by e-mail (bijan@binaee.ir) or postal mail
 
 #ifndef QrSDET_INCLUDED
 #define QrSDET_INCLUDED
+
 //C++ Standard Header
 #include <vector>
 #include <iostream>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <cmath>
 #include <sys/types.h>
@@ -55,12 +57,15 @@ You may contact the author by e-mail (bijan@binaee.ir) or postal mail
 #include <QtGui>
 #include <QFile>
 #include <QLabel>
+#include <QMutex>
 #include <QtCore>
 #include <QLocale>
+#include <QPointer>
 #include <QMenuBar>
 #include <QTextEdit>
 #include <QLineEdit>
 #include <QGroupBox>
+#include <QSplitter>
 #include <QMainWindow>
 #include <QDockWidget>
 #include <QPushButton>
@@ -76,6 +81,7 @@ You may contact the author by e-mail (bijan@binaee.ir) or postal mail
 #include <QProgressBar>
 #include <QApplication>
 #include <QDesktopWidget>
+#include <QVarLengthArray>
 //WFDB Header
 #include <wfdb/wfdb.h>
 #include <wfdb/ecgcodes.h>
@@ -103,7 +109,10 @@ You may contact the author by e-mail (bijan@binaee.ir) or postal mail
 #include <floatfann.h>
 //Fast Fourier Transform
 #include <fftw3.h>
+//Scanner (libksane)
+#include <libksane/ksane.h>
 //Name Space
 using namespace std;
 using namespace tbb;
+using namespace KSaneIface;
 #endif

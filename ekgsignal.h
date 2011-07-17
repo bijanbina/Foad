@@ -5,11 +5,12 @@ class EKGSignal
 {
 public:
     EKGSignal();
-    void setDB(QString path);
+    void  setDB(QString path);
     char *getDB();
     char *getRecord();
-    bool open(QString record);
-    bool read(int time , int Starttime = 0);
+    bool  open(QString record);
+    bool  read(int time , int Starttime = 0);
+    long int   nsamp();
     vector<double> getSignal();
 private:
     int NextSample(int *vout,int nosig,int ifreq, int ofreq,bool init);

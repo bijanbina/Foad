@@ -34,6 +34,7 @@ private slots:
     void scan();
     void openImage();
     void openRecord();
+    void scanFinished();
 
 private:
     void WekaDo();
@@ -133,7 +134,9 @@ private:
     int SigTime;
     QString SigRecord;
     //Scanner
-    EkgScan ekgScanner;
+    QScan *Scanner;
+    //Image Processor
+    EKGImageP imageProc;
 };
 
 #endif // EKGWINDOW_H

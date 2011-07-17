@@ -18,7 +18,10 @@ SOURCES += \
     GButton.cpp \
     ekgscan.cpp \
     ekgnn.cpp \
-    qrsdet.cpp
+    qrsdet.cpp \
+    EKGFramWork.cpp \
+    ekgimagep.cpp \
+    qscan.cpp
 
 DEPENDPATH  += /usr/include/qwt-qt4
 INCLUDEPATH += /usr/include/qwt-qt4
@@ -27,7 +30,8 @@ LIBS        += -lqwt-qt4 \
                -lm \
                -lfann \
                -ltbb \
-               -lfftw3
+               -lfftw3 \
+               -lksane
 
 #QMAKE_CXXFLAGS += -E
 QMAKE_CXXFLAGS += -mtune=core2
@@ -45,7 +49,10 @@ HEADERS += \
     ekgscan.h \
     ekgnn.h \
     header.h \
-    qrsdet.h
+    qrsdet.h \
+    EKGFramWork.h \
+    ekgimagep.h \
+    qscan.h
 
 RESOURCES += \
     EKG.qrc

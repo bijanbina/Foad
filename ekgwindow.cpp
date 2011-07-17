@@ -172,7 +172,7 @@ void EKGWindow::sCurve()
 ---------------------------------------------------------------------------------------------*/
 EKGWindow::EKGWindow(QWidget *parent) :QMainWindow(parent)
 {
-    //Logger
+    Scanner = new QScan;
     numbers = new QPushButton;
     //ADD Menu
     menu = new QMenuBar;
@@ -236,7 +236,7 @@ EKGWindow::EKGWindow(QWidget *parent) :QMainWindow(parent)
     QAction *A_setAge = EKGMenu->addAction("Set EKG Age");
     //Set Defualt Value
     mode = 1;
-    SigTime = 60;
+    SigTime = 20;
     SigRecord = "04015";
     EKG_age = 30;
     localFeature.P_amp = 0;
@@ -537,8 +537,13 @@ void EKGWindow::createInfo(QString name , QString value)
 }
 void EKGWindow::scan()
 {
-    ekgScanner.scan();
-    Intercept(ekgScanner.getSignal(),true,true);
+    Scanner->show();
+    connect(Scanner,SIGNAL(scanFinished()),this,SLOT(scanFinished()));
+}
+void EKGWindow::scanFinished()
+{
+    imageProc.loadPic("scan.png");
+    Intercept(imageProc.getSignal(),true,true);
 }
 void EKGWindow::openImage()
 {
@@ -547,8 +552,8 @@ void EKGWindow::openImage()
     QString selectedFilter;
     QString files = QFileDialog::getOpenFileName(this, title,"","Picture (*.png *.jpg *.tiff)",&selectedFilter,options);
     if(!files.isEmpty())
-        ekgScanner.loadPic(files);
-    Intercept(ekgScanner.getSignal(),true,false);
+        imageProc.loadPic(files);
+    Intercept(imageProc.getSignal(),true,false);
 }
 void EKGWindow::openRecord()
 {
@@ -582,6 +587,12 @@ void EKGWindow::openTrain()
 ---------------------------------------------------------------------------------------------*/
 weka_data EKGWindow::Intercept(vector<double> sig , bool getPlot, bool getIntercept)
 {
+    //Check Signal
+    if(sig.size() < 1)
+    {
+        Wraning("Signal is not correct");
+        return weka_data();
+    }
     //----------------------Variable------------------------
     localInfo = vector<Ekg_Data> ();
     int BufferSize = sig.size();
@@ -591,11 +602,11 @@ weka_data EKGWindow::Intercept(vector<double> sig , bool getPlot, bool getInterc
     for(int i = 0 ; i < BufferSize ; i++)
         signal[i] = sig[i];
     //-------------------------Initialize-------------------
-    //double kgh  = BufferSize;
+    double kgh  = BufferSize;
     //-------------------Progress Bar-----------------------
-    //Percentage += (kgh / signal_info.nsamp) * 190.0;
-    //double percentageBuffer = (kgh / signal_info.nsamp) * 1.9;
-    //filePercentage += FileMarhale * percentageBuffer;
+    Percentage += (kgh / sigReader.nsamp()) * 190.0;
+    double percentageBuffer = (kgh / sigReader.nsamp()) * 1.9;
+    filePercentage += FileMarhale * percentageBuffer;
     //------------------R Detection Start-------------------
     QRSDet localQRSD = QRSDet(sig);
     vector<double> Detected = localQRSD.getDetected();
@@ -603,6 +614,8 @@ weka_data EKGWindow::Intercept(vector<double> sig , bool getPlot, bool getInterc
         detected[i] = Detected[i];
     //---------------------Create Complex------------------
     Sig_Arr = localQRSD.getComplex();
+    if (Sig_Arr.size() < 1)
+        return weka_data();
     //---------------------Intercept EKG--------------------
     int ComplexID = -1;
     vector<double> Complex;
@@ -613,7 +626,7 @@ weka_data EKGWindow::Intercept(vector<double> sig , bool getPlot, bool getInterc
         else
             ComplexID = 15;
     }
-//-------------Devide Signal And Get Feuture------------
+    //------------------- Get Feuture -----------------------
     for (int i = 1 ; i < Sig_Arr.size();i++)
     {
         vector<double> SBFD = vector<double> (Sig_Arr[i].end - Sig_Arr[i].start);//Signal Buffer for Detection
@@ -626,7 +639,7 @@ weka_data EKGWindow::Intercept(vector<double> sig , bool getPlot, bool getInterc
         SigDetect localDETECTION = SigDetect(SBFD,false ,interceptPlot,i, EKG_age,Sig_Arr[i].start);
         localInfo.push_back(localDETECTION.getInfo());
     }
-//If in intercept Mode:
+    //If in intercept Mode:
     if (ComplexID != -1)
     {
         r_feature FW (localInfo);
@@ -634,10 +647,9 @@ weka_data EKGWindow::Intercept(vector<double> sig , bool getPlot, bool getInterc
         InterCeptWindow = SigDetect(Complex,true ,interceptPlot,ComplexID, EKG_age,Sig_Arr[ComplexID].start);
     }
     r_feature LFE(localInfo);
-//-------------------Cofigure Plot-------------------
+    //----------------------Make plot--------------------
     if (getPlot)
     {
-//----------------------Make plot--------------------
         plot(signal,detected,BufferSize);
     }
     diseaWriter DizReader(sigReader.getDB(),sigReader.getRecord());
@@ -645,6 +657,7 @@ weka_data EKGWindow::Intercept(vector<double> sig , bool getPlot, bool getInterc
     if (DizReader.isExist())
         Return.disease = DizReader.getDisease();
     localWeka = Return;
+    return Return;
 }
 void EKGWindow::Detection_Click()
 {

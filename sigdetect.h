@@ -1,6 +1,6 @@
 #ifndef SIGDETECT_H
 #define SIGDETECT_H
-#include "header.h"
+#include "EKGFramWork.h"
 
 //Defines:
 #define DETECTED 1001
@@ -42,14 +42,10 @@ public:
     SigDetect(vector<double> signal , bool getPlot , QwtPlot *plotwidget ,  int id , int EKG_Age , int start);
     Ekg_Data getInfo();
 private:
-    void plot(double *Signal,double *Detect ,int size);
+    void plot(double *Signal ,int size);
     void ZeroLine();
     void ZeroShib();
     bool AllDetected();
-    void Pow2();
-    void ABS();
-    void SQRT();
-    int MAX();
     double Miangin(vector<double>);
     double getLine(vector<double>);
     double getShib(vector<double> fbuffer);
@@ -82,15 +78,22 @@ private:
     QwtPlot *myPlot;
     QwtPlotZoomer *zoomer;
     QwtPlotCurve *Signal_curves;
-    QwtPlotCurve *Detect_curves;
     QwtPlotCurve *q_curves;
     QwtPlotCurve *r_curves;
     QwtPlotCurve *s_curves;
     QwtPlotCurve *p_curves;
     QwtPlotCurve *t_curves;
     QwtPlotCurve *u_curves;
+    QwtPlotCurve *pBold_curves;
+    QwtPlotCurve *tBold_curves;
 
     QwtPlotGrid *EKG_Grid;
+    //Geometry Function
+    void Pow2();
+    void ABS();
+    void SQRT();
+    int MAX();
+    double getShib(double point1,double point2);
     //
     void NODetect(double replace);
     void setDetect(vector<double> input);
