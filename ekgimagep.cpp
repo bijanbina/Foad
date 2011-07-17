@@ -60,13 +60,11 @@ vector<double> EKGImageP::proccessor()
 {
     if (scanImage.height() < 1)
         return vector<double>();
-    int i = 0;
     //Find Grid
     scanImage = crop2grid(scanImage);
     //Destroy Grid
     QColor replace_color = QColor(255,255,255);
     destroyGrid(replace_color);
-    //scanImage.save("scan.tiff");
     //Crop
     //Fill info
     vector<ImageInfo> imageSum = getPicInfo(scanImage);
@@ -92,8 +90,9 @@ vector<double> EKGImageP::proccessor()
             ghataat.push_back(scanImage.copy(0,start,scanImage.width(),end));
             maxCount.push_back(Mmax - start);
             //Check Vertical Count
-            int ghetee = VSegmentation(ghataat[ghataat.size()-1]);
-            if (ghetee > 1)
+            QImage input = ghataat[ghataat.size()-1];
+            vector<QImage> vseg = VSegmentation(input);
+            if (!HavaWidth(vseg ,input.width() / 2))
             {
                 ghataat.pop_back();
                 maxCount.pop_back();
@@ -103,6 +102,15 @@ vector<double> EKGImageP::proccessor()
     }
     //End Ghate ghate kardan Signal
 
+//    for (int k = 0 ; k < ghataat.size();k++)
+//    {
+//        QString filename = "scan";
+//        QString sd;
+//        sd.setNum(k+4);
+//        filename += sd;
+//        filename += ".png";
+//        ghataat[k].save(filename);
+//    }
 
     if (ghataat.size() < 1)
         return bSignal;
@@ -129,7 +137,7 @@ vector<double> EKGImageP::proccessor()
     bSignal.erase(bSignal.begin(),bSignal.begin()+100);
     bSignal.erase(bSignal.end()-100,bSignal.end());
     //Find Base Line
-    long mMin = 0;int mMax = 0,maingin = 0;
+    int maingin = 0;
     for(int k = 0 ; k < bSignal.size();k++)
     {
         maingin += bSignal[k];
@@ -139,50 +147,14 @@ vector<double> EKGImageP::proccessor()
     {
         bSignal[k] -= maingin;
     }
-//    int readSize = 200;
-//    if (readSize > bSignal.size())
-//        readSize = bSignal.size();
-
-//    mMax = 0 , mMin = 0;
-//    for(int i = 0 ; i < readSize ; i++)
-//    {
-//        if (bSignal[i] > bSignal[mMax])
-//            mMax = i;
-//        if(bSignal[i] < bSignal[mMin])
-//            mMin = i;
-//    }
-//    double nesbat = 0;
-//    if(abs(bSignal[mMin]) > abs(bSignal[mMax]))
-//    {
-//        nesbat = -300.0 / bSignal[mMin];
-//        for(int k = 0 ; k < bSignal.size();k++)
-//        {
-//            bSignal[k] *= nesbat;
-//        }
-//    }
-//    else
-//    {
-//        nesbat = 300.0 / bSignal[mMax];
-//        for(int k = 0 ; k < bSignal.size();k++)
-//        {
-//           bSignal[k] *= nesbat;
-//        }
-//    }
-
-    for (int k = 0 ; k < ghataat.size();k++)
-    {
-        QString filename = "scan";
-        QString sd;
-        sd.setNum(k+4);
-        filename += sd;
-        filename += ".png";
-        ghataat[k].save(filename);
-    }
-
-//    scanImage.save("scan3.png");
 
     return bSignal;
 }
+/*!
+  \sa find nearest pixel to value param
+  \param input imageInfo it can create manual!
+  \return return 0 if no black pixel found and return distance of nearest pixel to value
+*/
 int EKGImageP::findNazdik(int column , int value , QImage image )
 {
     int nazdik = 9999 , vNazdik = 0;
@@ -206,54 +178,34 @@ vector<double> EKGImageP::getSignal()
     proccessor();
     return bSignal;
 }
-int EKGImageP::VSegmentation(QImage input)
+vector<QImage> EKGImageP::VSegmentation(QImage input)
 {
-    //Crop
-    int red = 0,blue = 0 ,green = 0,realWidth = 0;
-    vector<ImageInfo> imageSum(input.width());
-    //fill picture info
-    for(int column = 0 ; column < input.width() ; column++)
-    {
-        red = 0,blue = 0 ,green = 0,realWidth = 0;
-        for(int row = 0 ; row < input.height() ; row++)
-        {
-            QColor color = QColor(input.pixel(column,row));
-            if(color.red() < 200 && color.blue() < 200 && color.blue() < 200)
-            {
-                red += color.red();
-                blue += color.blue();
-                green += color.green();
-                realWidth++;
-            }
-        }
-        if (realWidth == 0)
-            realWidth = 1;
-        red /= realWidth;
-        blue /= realWidth;
-        green /= realWidth;
-        imageSum[column].count = realWidth; imageSum[column].red = red;
-        imageSum[column].blue = blue; imageSum[column].green = green;
-    }
-    //End Fill info
-
+    vector<ImageInfo> imageSum = getVInfo(input);
+    input.save("input.png");
     //Ghate ghate kardan Signal
-    int start = 0,tool = 0,colomn = 0 , ghetee = 0;
+    int start = 0,end = 0,tool = 0,colomn = 0;
+    vector<QImage> ghataat;
     while(!BlackPixel(imageSum[colomn]))
         colomn++;
+    start = colomn;
     for(; colomn < input.width() ; colomn++)
     {
         if(!BlackPixel(imageSum[colomn]))
         {
-            start = colomn;
-            while(!BlackPixel(imageSum[colomn]))
+            end = colomn;
+            while(!BlackPixel(imageSum[colomn]) && colomn < input.width())
                 colomn++;
-            tool = colomn - start;
+            tool = colomn - end;
             if (tool > mm2Pixel)
-                ghetee++;
+            {
+                ghataat.push_back(input.copy(start,0,end-start,input.height()));
+                colomn++;
+                start = colomn;
+            }
         }
     }
 
-    return ghetee;
+    return ghataat;
 }
 
 vector<QImage> EKGImageP::HSegmentation(QImage input)
@@ -366,6 +318,37 @@ vector<ImageInfo> EKGImageP::getPicInfo(QImage input)
     return imageSum;
 }
 
+vector<ImageInfo> EKGImageP::getVInfo(QImage input)
+{
+    int red = 0,blue = 0 ,green = 0,realWidth = 0;
+    vector<ImageInfo> imageSum(input.width());
+    //fill picture info
+    for(int column = 0 ; column < input.width() ; column++)
+    {
+        red = 0,blue = 0 ,green = 0,realWidth = 0;
+        for(int row = 0 ; row < input.height() ; row++)
+        {
+            QColor color = QColor(input.pixel(column,row));
+            if(color.red() < 200 && color.blue() < 200 && color.blue() < 200)
+            {
+                red += color.red();
+                blue += color.blue();
+                green += color.green();
+                realWidth++;
+            }
+        }
+        if (realWidth == 0)
+            realWidth = 1;
+        red /= realWidth;
+        blue /= realWidth;
+        green /= realWidth;
+        imageSum[column].count = realWidth; imageSum[column].red = red;
+        imageSum[column].blue = blue; imageSum[column].green = green;
+    }
+
+    return imageSum;
+}
+
 /*!
   \sa if have Black pixel return true
   \param input imageInfo it can create manual!
@@ -376,3 +359,33 @@ bool EKGImageP::BlackPixel(ImageInfo input)
         return true;
     return false;
 }
+
+
+/*!
+  \sa find out have any image that bigger than size value
+  \param input imageInfo it can create manual!
+*/
+bool EKGImageP::HavaWidth(vector<QImage> input,int width)
+{
+    for(int i = 0;i<input.size();i++)
+        if(input[i].width() >= width)
+            return true;
+    return false;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

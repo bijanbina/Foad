@@ -52,14 +52,16 @@ public:
     void              loadPic(QString path);
 private:
     bool              BlackPixel(ImageInfo input);
+    bool              HavaWidth(vector<QImage> input,int width);
     bool              isblack(QColor color);
     int               isColor(QColor color);
     void              destroyGrid(QColor color);
     int               getRow(int row);
-    int               VSegmentation(QImage input);
     double            mm2Pixel;                                          //use to convert between milimetr and pixel
+    vector<QImage>    VSegmentation(QImage input);
     vector<QImage>    HSegmentation(QImage input);
     vector<ImageInfo> getPicInfo(QImage input);
+    vector<ImageInfo> getVInfo(QImage input);
     QImage            bijooFilter(QImage input);
     QImage            crop2grid(QImage input);
     QColor            getColumn(int Column);
