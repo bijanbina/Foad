@@ -1,31 +1,31 @@
 #include "ekgnn.h"
 
-EKGNN::EKGNN()
+EKGNN::EKGNN(QString path,QObject *parent) :
+    QObject(parent)
 {
-    trainPatch = "";
-    NNPatch = "";
+    ann = fann_create_from_file(path.toStdString().c_str());
+    isStarted = true;
 }
 
-void EKGNN::setTrain(QString path)
+void EKGNN::Train(QString path,int epoch)
 {
-    trainPatch = path;
+    trainPatch = path.toStdString().c_str();
+    fann_train_data *data = fann_read_train_from_file(trainPatch);
+    //Start Learn
+    for(int i =1;i<epoch;i++)
+        emit report(fann_train_epoch(ann,data));
 }
 
-void EKGNN::setNNPath(QString path)
+void EKGNN::openNN(QString path)
 {
-    NNPatch = path;
-}
-
-void EKGNN::openNN()
-{
-    if (NNPatch.isEmpty())
-        return;
-    ann = fann_create_from_file("xor_float.net");
+    ann = fann_create_from_file(path.toStdString().c_str());
     isStarted = true;
 }
 
 double EKGNN::getOutPut(weka_data inputData)
 {
+    if(!isStarted)
+        return 0;
     fann_type *calc_out;
     fann_type input[5];
     input[0] = inputData.sqsdetected;

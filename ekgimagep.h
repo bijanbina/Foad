@@ -51,19 +51,23 @@ public:
     int               findNazdik(int coloumn , int value , QImage image );
     void              loadPic(QString path);
 private:
+    int               mm2s;                                              //use to convert milimetr to second
+    int               mm2mV;                                             //use to convert milimetr to mili volt
     bool              BlackPixel(ImageInfo input);
     bool              HavaWidth(vector<QImage> input,int width);
     bool              isblack(QColor color);
     int               isColor(QColor color);
     void              destroyGrid(QColor color);
     int               getRow(int row);
-    double            mm2Pixel;                                          //use to convert between milimetr and pixel
+    double            mm2Pixel;                                          //use to convert milimetr to pixel
+    double            Pixel2mm;                                          //use to convert pixel to milimetr
     vector<QImage>    VSegmentation(QImage input);
     vector<QImage>    HSegmentation(QImage input);
     vector<ImageInfo> getPicInfo(QImage input);
     vector<ImageInfo> getVInfo(QImage input);
     QImage            bijooFilter(QImage input);
     QImage            crop2grid(QImage input);
+    vector<int>       maxCount;
     QColor            getColumn(int Column);
     QImage            scanImage;
     vector<double>    bSignal;

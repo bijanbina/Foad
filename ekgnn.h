@@ -5,19 +5,24 @@
 #ifndef EKGNN_H
 #define EKGNN_H
 #include "qscan.h"
-class EKGNN
+
+
+class EKGNN : public QObject
 {
+    Q_OBJECT
 public:
-    EKGNN();
-    void setTrain(QString path);
-    void setNNPath(QString path);
-    void openNN();
+    explicit EKGNN(QString path,QObject *parent = 0);
+    void Train(QString path,int epoch);
+    void openNN(QString path);
     double getOutPut(weka_data inputData);
+
 private:
-    QString trainPatch;
-    QString NNPatch;
+    char const *trainPatch;
     bool isStarted;
     struct fann *ann;
+signals:
+    void report(int value);
+
 };
 
 #endif // EKGNN_H

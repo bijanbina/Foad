@@ -38,6 +38,7 @@ QScan::QScan(QWidget *parent) :
     //------- Signal & Slot ----------
     connect(updator,SIGNAL(timeout()),this,SLOT(imageUpdate()));
     connect(ScanBtn,SIGNAL(clicked()),this,SLOT(scanPushed()));
+    connect(Scanner,SIGNAL(ScanFinished()),this,SLOT(stopUpdate()));
 }
 
 void QScan::imageUpdate()
@@ -46,8 +47,7 @@ void QScan::imageUpdate()
     QPixmap buffer;
     //buffer.fromImage(recovered);
     //Resize
-    //double nesbat = 100.0 / buffer.width();
-    //buffer = buffer.scaled(100,nesbat * buffer.height(),Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
+    //buffer = buffer.scaled(210,300,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
     //Show up
     //image->setPixmap(buffer);
 }
@@ -62,14 +62,14 @@ void QScan::scanPushed()
         return;
     }
     updator->start();
-    connect(Scanner,SIGNAL(finished()),this,SLOT(stopUpdate()));
+    ScanBtn->setEnabled(false);
 }
 
 void QScan::stopUpdate()
 {
     updator->stop();
-    emit scanFinished();
     close();
+    emit scanFinished();
 }
 
 void QScan::Warning(QString text)

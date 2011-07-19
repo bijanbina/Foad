@@ -8,6 +8,9 @@ void EKGImageP::loadPic(QString path)
 {
     scanImage = QImage(path);
     mm2Pixel  = scanImage.height() / 210.0; // 1 millimeter is mm2Pixel pixel
+    Pixel2mm  = 210.0 / scanImage.height();
+    mm2s      = 25;
+    mm2mV     = 10;
 }
 int EKGImageP::getRow(int row)
 {
@@ -66,51 +69,10 @@ vector<double> EKGImageP::proccessor()
     QColor replace_color = QColor(255,255,255);
     destroyGrid(replace_color);
     //Crop
-    //Fill info
-    vector<ImageInfo> imageSum = getPicInfo(scanImage);
-
-    //Ghate ghate kardan Signal
-    int start = 0,end = 0;
-    vector<QImage> ghataat;
-    vector<int> maxCount;
+    vector<QImage> ghataat = HSegmentation(scanImage);
     bSignal = vector<double> (0);
-    for(int row = 0 ; row < scanImage.height() ; row++)
-    {
-        if(BlackPixel(imageSum[row]))
-        {
-            start = row;
-            int Mmax = 0;
-            while(BlackPixel(imageSum[row]) && row < scanImage.height() )
-            {
-                if(imageSum[row].count > imageSum[Mmax].count)
-                    Mmax = row;
-                row++;
-            }
-            end = row - start;
-            ghataat.push_back(scanImage.copy(0,start,scanImage.width(),end));
-            maxCount.push_back(Mmax - start);
-            //Check Vertical Count
-            QImage input = ghataat[ghataat.size()-1];
-            vector<QImage> vseg = VSegmentation(input);
-            if (!HavaWidth(vseg ,input.width() / 2))
-            {
-                ghataat.pop_back();
-                maxCount.pop_back();
-            }
-        }
-        end = 0;
-    }
-    //End Ghate ghate kardan Signal
 
-//    for (int k = 0 ; k < ghataat.size();k++)
-//    {
-//        QString filename = "scan";
-//        QString sd;
-//        sd.setNum(k+4);
-//        filename += sd;
-//        filename += ".png";
-//        ghataat[k].save(filename);
-//    }
+    //End Ghate ghate kardan Signal
 
     if (ghataat.size() < 1)
         return bSignal;
@@ -147,9 +109,15 @@ vector<double> EKGImageP::proccessor()
     {
         bSignal[k] -= maingin;
     }
-
+    //Scale to real (mV) value
+    double Pixel2mV = Pixel2mm * mm2mV * 5;
+    for(int k = 0 ; k < bSignal.size();k++)
+    {
+        bSignal[k] *= Pixel2mV;
+    }
     return bSignal;
 }
+
 /*!
   \sa find nearest pixel to value param
   \param input imageInfo it can create manual!
@@ -210,10 +178,7 @@ vector<QImage> EKGImageP::VSegmentation(QImage input)
 
 vector<QImage> EKGImageP::HSegmentation(QImage input)
 {
-    int tedad = 0;
     vector<ImageInfo> imageSum = getPicInfo(input);
-    //End Fill info
-
     //Ghate ghate kardan Signal
     int start = 0,end = 0;
     vector<QImage> ghataat;
@@ -231,10 +196,15 @@ vector<QImage> EKGImageP::HSegmentation(QImage input)
                 row++;
             }
             end = row - start;
-            if (end > 100)
+            ghataat.push_back(input.copy(0,start,input.width(),end));
+            maxCount.push_back(Mmax - start);
+            //Check Vertical Count
+            QImage imageBuffer = ghataat[ghataat.size()-1];
+            vector<QImage> vseg = VSegmentation(imageBuffer);
+            if (!HavaWidth(vseg ,imageBuffer.width() / 2))
             {
-                tedad++;
-                ghataat.push_back(input.copy(0,start,input.width(),end));
+                ghataat.pop_back();
+                maxCount.pop_back();
             }
         }
         end = 0;

@@ -17,11 +17,11 @@ SOURCES += \
     ekgsignal.cpp \
     GButton.cpp \
     ekgscan.cpp \
-    ekgnn.cpp \
     qrsdet.cpp \
     EKGFramWork.cpp \
     ekgimagep.cpp \
-    qscan.cpp
+    qscan.cpp \
+    ekgnn.cpp
 
 DEPENDPATH  += /usr/include/qwt-qt4
 INCLUDEPATH += /usr/include/qwt-qt4
@@ -47,12 +47,12 @@ HEADERS += \
     ekgsignal.h \
     GButton.h \
     ekgscan.h \
-    ekgnn.h \
     header.h \
     qrsdet.h \
     EKGFramWork.h \
     ekgimagep.h \
-    qscan.h
+    qscan.h \
+    ekgnn.h
 
 RESOURCES += \
     EKG.qrc

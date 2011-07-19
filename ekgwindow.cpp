@@ -42,7 +42,7 @@ void EKGWindow::plot(double *Signal,double *Detect ,int size)
     //--------------- Preparing -----------------
     myPlot->setTitle("EKG Signal");
     myPlot->setAxisTitle(myPlot->xBottom, "Time (s)");
-    myPlot->setAxisTitle(myPlot->yLeft, "Voltage");
+    myPlot->setAxisTitle(myPlot->yLeft, "Voltage (mV)");
     Signal_curves->setRenderHint(QwtPlotItem::RenderAntialiased);
     Detect_curves->setRenderHint(QwtPlotItem::RenderAntialiased);
     //-------------- Add Symbol -------------------
@@ -301,6 +301,7 @@ EKGWindow::EKGWindow(QWidget *parent) :QMainWindow(parent)
     connect(A_setDiz,SIGNAL(triggered(bool)),this,SLOT(setDisease()));
     connect(A_Scan,SIGNAL(triggered(bool)),this,SLOT(scan()));
     connect(A_LoadImage,SIGNAL(triggered(bool)),this,SLOT(openImage()));
+    connect(Scanner,SIGNAL(scanFinished()),this,SLOT(scanFinished()));
     Percentage = 0;
 }
 void EKGWindow::A_Fil_change()
@@ -538,12 +539,15 @@ void EKGWindow::createInfo(QString name , QString value)
 void EKGWindow::scan()
 {
     Scanner->show();
-    connect(Scanner,SIGNAL(scanFinished()),this,SLOT(scanFinished()));
 }
 void EKGWindow::scanFinished()
 {
     imageProc.loadPic("scan.png");
+    interceptPlot = new QwtPlot;
+    interceptPlot->canvas()->setFrameStyle(0);
+    interceptPlot->setTitle("Intercept Plot");
     Intercept(imageProc.getSignal(),true,true);
+    CreateLayout(0);
 }
 void EKGWindow::openImage()
 {
@@ -552,8 +556,14 @@ void EKGWindow::openImage()
     QString selectedFilter;
     QString files = QFileDialog::getOpenFileName(this, title,"","Picture (*.png *.jpg *.tiff)",&selectedFilter,options);
     if(!files.isEmpty())
+    {
         imageProc.loadPic(files);
-    Intercept(imageProc.getSignal(),true,false);
+        interceptPlot = new QwtPlot;
+        interceptPlot->canvas()->setFrameStyle(0);
+        interceptPlot->setTitle("Intercept Plot");
+        Intercept(imageProc.getSignal(),true,true);
+        CreateLayout(0);
+    }
 }
 void EKGWindow::openRecord()
 {
@@ -621,7 +631,7 @@ weka_data EKGWindow::Intercept(vector<double> sig , bool getPlot, bool getInterc
     vector<double> Complex;
     if (getIntercept)
     {
-        if (B_AskComplex->isChecked())
+        if (B_AskComplex->isChecked() || Sig_Arr.size() < 15)
             ComplexID = askComplex(Sig_Arr.size());
         else
             ComplexID = 15;
@@ -656,6 +666,8 @@ weka_data EKGWindow::Intercept(vector<double> sig , bool getPlot, bool getInterc
     weka_data Return = LFE.getWeka();
     if (DizReader.isExist())
         Return.disease = DizReader.getDisease();
+    else
+        Return.disease = "normal";
     localWeka = Return;
     return Return;
 }
@@ -945,8 +957,7 @@ int EKGWindow::askComplex(int end)
 //! [0]
     QString buffer =QString("Complex Number To Intercept");
     bool ok;
-    int i = QInputDialog::getInt(this, buffer,
-                                 buffer, 15, 0, end, 1, &ok);
+    int i = QInputDialog::getInt(0, buffer,buffer,3, 0, end, 1, &ok);
     if (ok)
         return i;
     else
