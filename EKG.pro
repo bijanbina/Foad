@@ -21,7 +21,8 @@ SOURCES += \
     EKGFramWork.cpp \
     ekgimagep.cpp \
     qscan.cpp \
-    ekgnn.cpp
+    ekgnn.cpp \
+    nnframwork.cpp
 
 DEPENDPATH  += /usr/include/qwt-qt4
 INCLUDEPATH += /usr/include/qwt-qt4
@@ -29,7 +30,6 @@ LIBS        += -lqwt-qt4 \
                -lwfdb \
                -lm \
                -lfann \
-               -ltbb \
                -lfftw3 \
                -lksane
 
@@ -52,7 +52,8 @@ HEADERS += \
     EKGFramWork.h \
     ekgimagep.h \
     qscan.h \
-    ekgnn.h
+    ekgnn.h \
+    nnframwork.h
 
 RESOURCES += \
     EKG.qrc

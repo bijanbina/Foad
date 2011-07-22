@@ -1,6 +1,6 @@
 #ifndef EKGWINDOW_H
 #define EKGWINDOW_H
-#include "qrsdet.h"
+#include "nnframwork.h"
 #define TIMEREPEAT 60
 #define TRAiNTIME 8 * SAMPLE_RATE
 #define WIDTH 800
@@ -63,37 +63,37 @@ private:
     QHBoxLayout *Progress_Layout;
     //Menu
     QMenuBar *menu;
-    QAction *A_Ekg_signal;
-    QAction *A_Start_Train;
-    QAction *A_Det_signal;
-    QAction *A_Fil_signal;
-    QAction *A_Plot_show;
-    QAction *A_Quit;
-    QAction *A_Start;
-    QAction *A_DiseaseMode;
-    QAction *A_InterMode;
-    QAction *A_WekaMode;
-    QAction *A_Save;
-    QAction *A_Scan;
-    QAction *A_LoadImage;
-    QAction *A_clearlog;
-    QAction *A_SetTime;
-    QAction *A_SetDB;
-    QAction *A_SetRecord;
-    QAction *B_AskComplex;
+    QAction  *A_Ekg_signal;
+    QAction  *A_Start_Train;
+    QAction  *A_Det_signal;
+    QAction  *A_Fil_signal;
+    QAction  *A_Plot_show;
+    QAction  *A_Quit;
+    QAction  *A_Start;
+    QAction  *A_DiseaseMode;
+    QAction  *A_InterMode;
+    QAction  *A_WekaMode;
+    QAction  *A_Save;
+    QAction  *A_Scan;
+    QAction  *A_LoadImage;
+    QAction  *A_clearlog;
+    QAction  *A_SetTime;
+    QAction  *A_SetDB;
+    QAction  *A_SetRecord;
+    QAction  *B_AskComplex;
     //Plot
-    QwtPlot *myPlot;
-    QwtPlot *interceptPlot;
+    QwtPlot       *myPlot;
+    QwtPlot       *interceptPlot;
     QwtPlotZoomer *zoomer;
-    QwtPlotCurve *Signal_curves;
-    QwtPlotCurve *Detect_curves;
-    QwtPlotGrid *EKG_Grid;
-    QwtPlotCurve *q_curves;
-    QwtPlotCurve *r_curves;
-    QwtPlotCurve *s_curves;
-    QwtPlotCurve *p_curves;
-    QwtPlotCurve *t_curves;
-    QwtPlotCurve *u_curves;
+    QwtPlotCurve  *Signal_curves;
+    QwtPlotCurve  *Detect_curves;
+    QwtPlotGrid   *EKG_Grid;
+    QwtPlotCurve  *q_curves;
+    QwtPlotCurve  *r_curves;
+    QwtPlotCurve  *s_curves;
+    QwtPlotCurve  *p_curves;
+    QwtPlotCurve  *t_curves;
+    QwtPlotCurve  *u_curves;
     //Functions for Plot
     void qCurve();
     void rCurve();
@@ -101,11 +101,11 @@ private:
     void pCurve();
     void tCurve();
     //EKG
-    int mode;
-    EKG_atr localFeature;
-    wekaWriter LWW;                //Neural Network Train Data Constructor
-    ListRW disList;                //Disease List
-    weka_data localWeka;
+    int        mode;
+    EKG_atr    localFeature;
+    wekaWriter LWW;                     //Neural Network Train Data Constructor
+    ListRW     disList;                //Disease List
+    weka_data  localWeka;
     vector<double> Signal;
     EKGSignal sigReader;
     int ventricularrate();

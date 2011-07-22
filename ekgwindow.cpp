@@ -237,7 +237,7 @@ EKGWindow::EKGWindow(QWidget *parent) :QMainWindow(parent)
     //Set Defualt Value
     mode = 1;
     SigTime = 20;
-    SigRecord = "04015";
+    SigRecord = "100";
     EKG_age = 30;
     localFeature.P_amp = 0;
     localFeature.Q_amp = 0;

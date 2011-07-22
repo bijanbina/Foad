@@ -76,7 +76,7 @@ SigDetect::SigDetect(vector<double> signal , bool getPlot , QwtPlot *plotwidget 
         {
             int Pcount = 0;
             findP();
-            while(!AllDetected() && Pcount < 30)
+            while(!AllDetected() && Pcount < 5)
             {
                 Pcount++;
                 //findP();
@@ -613,7 +613,7 @@ bool SigDetect::findP()
         bufferList.erase(bufferList.begin());
         Pwidth++;
         i++;
-        if ((getLine(bufferList) > 12 || Miangin(bufferList) > 10) && buffer[i] != DETECTED)
+        if ((getLine(bufferList) > 10 || i - mMax < 10) && buffer[i] != DETECTED)
         {
             if (MainSig[i] > MainSig[nMax])
             {
@@ -636,7 +636,7 @@ bool SigDetect::findP()
         i--;
         bufferList.insert(bufferList.begin(),buffer[i - bufferList.size()]);
         bufferList.erase(bufferList.end()-1);
-        if ((getLine(bufferList) > 12 || Miangin(bufferList) > 10) && buffer[i] != DETECTED)
+        if ((getLine(bufferList) > 10 || mMax - i < 10) && buffer[i] != DETECTED)
         {
             if (MainSig[i] > MainSig[nMax])
             {
@@ -690,8 +690,8 @@ bool SigDetect::findT()
         bufferList.erase(bufferList.begin());
         i++;
         Twidth++;
-        if ((getLine(bufferList) > 12 || Miangin(bufferList) > 10) &&
-                (getShib(bufferList) <= 0 || Miangin(bufferList) > 10) && buffer[i] != DETECTED)
+        if ((getLine(bufferList) > 10 || i - PMax < 10) &&
+                (getShib(bufferList) <= 0 || i - PMax < 10) && buffer[i] != DETECTED)
         {
             if (MainSig[i] > MainSig[nMax])
             {
@@ -715,8 +715,8 @@ bool SigDetect::findT()
         Twidth++;
         bufferList.insert(bufferList.begin(),buffer[i - bufferList.size()]);
         bufferList.erase(bufferList.end()-1);
-        if ((getLine(bufferList) > 12 || Miangin(bufferList) > 10) &&
-                (getShib(bufferList) >= 0 || Miangin(bufferList) > 10) && buffer[i] != DETECTED)
+        if ((getLine(bufferList) > 10 || i - PMax < 10) &&
+                (getShib(bufferList) >= 0 || PMax -i < 10) && buffer[i] != DETECTED)
         {
             buffer[i] = DETECTED;
             if (MainSig[i] > MainSig[nMax])
@@ -912,7 +912,7 @@ void SigDetect::pCurve()
     pBold_curves = new QwtPlotCurve;
     p_curves = new QwtPlotCurve;
     //Calculate S place
-    if (sigInfo.Pcount == 1)
+    if (sigInfo.Pcount > 0)
     {
         double x[sigInfo.Pcount];
         double y[sigInfo.Pcount];
@@ -931,7 +931,7 @@ void SigDetect::pCurve()
         sym.setSize(8);
         p_curves->setSymbol(sym);
         p_curves->setStyle(QwtPlotCurve::NoCurve);
-        //------------ Bold T Duration ----------------
+        //------------ Bold P Duration ----------------
         int size = sigInfo.p[0].end - sigInfo.p[0].start + 1;
         double Xbold[size];
         double Ybold[size];
