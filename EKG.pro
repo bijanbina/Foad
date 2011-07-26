@@ -22,7 +22,8 @@ SOURCES += \
     ekgimagep.cpp \
     qscan.cpp \
     ekgnn.cpp \
-    nnframwork.cpp
+    nnframwork.cpp \
+    infowidget.cpp
 
 DEPENDPATH  += /usr/include/qwt-qt4
 INCLUDEPATH += /usr/include/qwt-qt4
@@ -53,7 +54,8 @@ HEADERS += \
     ekgimagep.h \
     qscan.h \
     ekgnn.h \
-    nnframwork.h
+    nnframwork.h \
+    infowidget.h
 
 RESOURCES += \
     EKG.qrc

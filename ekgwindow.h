@@ -21,6 +21,7 @@ private slots:
     void addDisease();
     void setDisease();
     void A_Weka_Save();
+    void A_TrainMode();
     void setRecordNum();
     void A_Sig_change();
     void A_Det_change();
@@ -40,7 +41,7 @@ private:
     void WekaDo();
     void Info_Box();
     int askComplex(int end);
-    void Wraning(QString text);
+    void Warning(QString text);
     void OpenError(char *recordNum);
     void CreateLayout(bool newplot);
     void CreateWeka(char* recordNum);
@@ -137,6 +138,8 @@ private:
     QScan *Scanner;
     //Image Processor
     EKGImageP imageProc;
+    //Neural Network
+    NNframwork *NNWidget;
 };
 
 #endif // EKGWINDOW_H

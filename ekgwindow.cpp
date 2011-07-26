@@ -7,8 +7,8 @@ void EKGWindow::plot(double *Signal,double *Detect ,int size)
 {
     myPlot->clear();
     myPlot->plotLayout()->setAlignCanvasToScales(true);
-    vector<double> xDetect(0);
-    vector<double> yDetect(0);
+    vector<double> xDetect;
+    vector<double> yDetect;
     double x[size];
     double s = 0;
     for(int i = 0 ; i < size ; i++)
@@ -172,8 +172,9 @@ void EKGWindow::sCurve()
 ---------------------------------------------------------------------------------------------*/
 EKGWindow::EKGWindow(QWidget *parent) :QMainWindow(parent)
 {
-    Scanner = new QScan;
-    numbers = new QPushButton;
+    Scanner  = new QScan;
+    numbers  = new QPushButton;
+    NNWidget = new NNframwork;
     //ADD Menu
     menu = new QMenuBar;
     //menu->setLayoutDirection(Qt::RightToLeft);
@@ -280,9 +281,9 @@ EKGWindow::EKGWindow(QWidget *parent) :QMainWindow(parent)
                 available_geom.height() / 2 - current_geom.height() / 2,
                 current_geom.width(),current_geom.height());
     if (!disList.isExist())
-            Wraning("\nYou doesn't create a disease list\nfor do this go to EKG menu and click on \"Add Desase\"");
+            Warning("\nYou doesn't create a disease list\nfor do this go to EKG menu and click on \"Add Desase\"");
     //Signal and slot connect
-    connect(A_Start_Train,SIGNAL(triggered(bool)),this,SLOT(A_Det_change()));
+    connect(A_Start_Train,SIGNAL(triggered(bool)),this,SLOT(A_TrainMode()));
     connect(A_Quit,SIGNAL(triggered(bool)),this,SLOT(close()));
     connect(A_SetDB,SIGNAL(triggered(bool)),this,SLOT(setDB_Path()));
     connect(A_Save,SIGNAL(triggered(bool)),this,SLOT(A_Weka_Save()));
@@ -351,6 +352,10 @@ void EKGWindow::A_Det_change()
     else
         Detect_curves->detach();
     myPlot->replot();
+}
+void EKGWindow::A_TrainMode()
+{
+    setCentralWidget(NNWidget);
 }
 void EKGWindow::A_InterMode_change()
 {
@@ -577,8 +582,8 @@ void EKGWindow::openRecord()
     {
         QFileInfo recordFile = QFileInfo(files);
         SigRecord = recordFile.baseName();
+        Detection_Click();
     }
-    Detection_Click();
 }
 void EKGWindow::openTrain()
 {
@@ -600,7 +605,7 @@ weka_data EKGWindow::Intercept(vector<double> sig , bool getPlot, bool getInterc
     //Check Signal
     if(sig.size() < 1)
     {
-        Wraning("Signal is not correct");
+        Warning("Signal is not correct");
         return weka_data();
     }
     //----------------------Variable------------------------
@@ -871,7 +876,7 @@ void EKGWindow::OpenError(char *recornNum)
     strm+=recornNum;
     strm+=" !";
     strm+="\nPlease Check .hea and .dat of signal File ";
-    Wraning(strm);
+    Warning(strm);
 }
 vector<QString> EKGWindow::getFiles(char *patch)
 {
@@ -949,7 +954,7 @@ QString EKGWindow::askDiz(const char* recornNum)
             DiseaseName = "";
     }
     else
-        Wraning("\nYou doesn't create a disease list\nfor do this go to EKG menu and click on \"Add Desase\"");
+        Warning("\nYou doesn't create a disease list\nfor do this go to EKG menu and click on \"Add Desase\"");
     return DiseaseName;
 }
 int EKGWindow::askComplex(int end)
@@ -963,7 +968,7 @@ int EKGWindow::askComplex(int end)
     else
         return -1;
 }
-void EKGWindow::Wraning(QString text)
+void EKGWindow::Warning(QString text)
 {
     QString title = "Warning";
     QMessageBox *warnWindow = new QMessageBox(QMessageBox::Warning,title,text);
@@ -994,7 +999,7 @@ void EKGWindow::setDisease()
         QString item = QInputDialog::getItem(this, title,Label, items, 0, false, &ok);
     }
     else
-        Wraning("\nYou doesn't create a disease list\nfor do this go to EKG menu and click on \"Add Desase\"");
+        Warning("\nYou doesn't create a disease list\nfor do this go to EKG menu and click on \"Add Desase\"");
 }
 QStringList EKGWindow::AddRecordFile(QString patch)
 {

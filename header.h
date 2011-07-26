@@ -37,22 +37,23 @@ You may contact the author by e-mail (bijan@binaee.ir) or postal mail
 #define QrSDET_INCLUDED
 
 //C++ Standard Header
-#include <vector>
+#include <sys/types.h>
+#include <algorithm>
 #include <iostream>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <stdio.h>
-#include <cmath>
-#include <sys/types.h>
 #include <dirent.h>
+#include <stdarg.h>
 #include <errno.h>
-#include <algorithm>
-#include <time.h>
-#include <string>
 #include <sstream>
 #include <cstdlib>
 #include <fstream>
+#include <stdio.h>
+#include <time.h>
+#include <string>
+#include <vector>
+#include <cmath>
 //QT Header
 #include <QtGui>
 #include <QFile>

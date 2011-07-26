@@ -40,7 +40,9 @@ void GButton::paintEvent(QPaintEvent * pe)
 
 	fade(nImage,pImage,painter);
 	painter.setOpacity (1);
-	painter.drawText (QRect(0,0,width(),height()),Qt::AlignCenter,bText);
+        painter.setFont(QFont("Oblivious font",10));
+        painter.setPen(QColor(0,0,0,200));
+        painter.drawText (QRect(0,0,width(),height()),Qt::AlignCenter,bText);
 }
 
 void GButton::enterEvent(QEvent * e)
