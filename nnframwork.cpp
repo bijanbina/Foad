@@ -67,10 +67,14 @@ void NNframwork::createConnection()
 void NNframwork::updateEpoch(double value)
 {
     EpochNum += UPDATE_PER_EPCOCH;
-    EpochError.push_back(value);
     i_lastE->setValue(value);
     i_EpochNum->setValue(EpochNum);
-    plot(EpochError);
+    int k =pow(UPDATE_PER_EPCOCH,2);
+    //if (EpochNum % k == 0)
+    //{
+        EpochError.push_back(value);
+        plot(EpochError);
+    //}
 }
 
 void NNframwork::openClicked()
@@ -138,7 +142,6 @@ void NNframwork::Warning(QString text)
 
 void NNframwork::plot(vector<double> data)
 {
-    //myPlot->clear();
     int length = data.size();
     double X[length];
     double Y[length];
@@ -174,7 +177,7 @@ void NNframwork::PlotConfig(QString plotName,int xSize)
     sym.setPen(QColor(Qt::red));
     sym.setBrush(QColor(Qt::yellow));
     sym.setSize(7);
-    Train_curves->setSymbol(sym);
+    //Train_curves->setSymbol(sym);
     //-----------------Set pen-----------------------
     QPen ekgPen(Qt::blue);
     ekgPen.setWidthF(0.5);

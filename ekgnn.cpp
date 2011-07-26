@@ -255,10 +255,10 @@ void EKGNN::run()
 {
     fann_train_data *data = fann_read_train_from_file(trainPatch);
     //Start Learn
-    for(int i =1;i<epochNum;i++)
+    for(int i =0;i<epochNum;i++)
     {
         emit report(fann_train_epoch(ann,data));
-        for(int j = 1;j<UPDATE_PER_EPCOCH;j++)
+        for(int j = 0;j<UPDATE_PER_EPCOCH;j++)
             fann_train_epoch(ann,data);
     }
 
