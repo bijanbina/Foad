@@ -18,7 +18,7 @@ struct NNSetting
     int LayerNum;
     int OutputNeuronsNum;
     int InputNeuronsNum;
-}
+};
 
 class EKGNN : public QThread
 {
