@@ -36,26 +36,43 @@ You may contact the author by e-mail (bijan@binaee.ir) or postal mail
 
 #include "qrsdet.h"
 
-class InfoWidget : public QGroupBox
+class InfoWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit InfoWidget(QWidget *parent = 0);
-    explicit InfoWidget(QString name , int value , QWidget *parent = 0);
-    explicit InfoWidget(QString name , QString value , QWidget *parent = 0);
-    void setName(QString name);
-    void setValue(double value);
-    void setValue(int value);
-    void setValue(QString value);
-    QString getValue();
+    enum LColor
+    {
+        Blue = 1,
+        Green,
+        Red,
+        Orenge,
+        Gold,
+        LightBlue,
+        LightGreen,
+        White,
+        Purple,
+        LightPurple
+    };
+    explicit InfoWidget(LColor color = White , QWidget *parent = 0);
+    explicit InfoWidget(QString name , int value , LColor color = White , QWidget *parent = 0);
+    explicit InfoWidget(QString name , QString value , LColor color = White , QWidget *parent = 0);
+    void     setName(QString name);
+    void     setValue(double value);
+    void     setValue(int value);
+    void     setValue(QString value);
+    void     setColor(LColor color);
+    LColor   getColor();
+    QString  getValue();
 signals:
 
 public slots:
 
 private:
-    QHBoxLayout  *H_Layout;
-    QLabel       *Valuelabel;
-    QLabel       *Namelabel;
+    void          paintEvent(QPaintEvent * pe);
+    QImage        LImage;
+    LColor        labelColor;
+    QString       Value;
+    QString       Name;
 };
 
 #endif // INFOWIDGET_H

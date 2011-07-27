@@ -1,67 +1,146 @@
 #include "infowidget.h"
 
-InfoWidget::InfoWidget(QWidget *parent) :
-    QGroupBox(parent)
+InfoWidget::InfoWidget(LColor color , QWidget *parent) :
+    QWidget(parent)
 {
-    H_Layout = new QHBoxLayout;
-    Namelabel = new QLabel("");
-    H_Layout->addWidget(Namelabel);
-    Valuelabel = new QLabel("");
-    H_Layout->addWidget(Valuelabel);
-    setLayout(H_Layout);
+    //Set Widget Color
+    setColor(color);
 }
 
-InfoWidget::InfoWidget(QString name , int value , QWidget *parent):
-    QGroupBox(parent)
+InfoWidget::InfoWidget(QString name , int value , LColor color , QWidget *parent):
+    QWidget(parent)
 {
     //convert value to string
-    QString valueBuffer;
-    valueBuffer.setNum(value);
-
-    H_Layout = new QHBoxLayout;
-    Namelabel = new QLabel(name);
-    H_Layout->addWidget(Namelabel);
-    Valuelabel = new QLabel(valueBuffer);
-    H_Layout->addWidget(Valuelabel);
-    setLayout(H_Layout);
+    Value.setNum(value);
+    Name = name;
+    //Set Widget Color
+    setColor(color);
 }
 
-InfoWidget::InfoWidget(QString name , QString value , QWidget *parent):
-    QGroupBox(parent)
+InfoWidget::InfoWidget(QString name , QString value , LColor color , QWidget *parent):
+    QWidget(parent)
 {
-    H_Layout = new QHBoxLayout;
-    Namelabel = new QLabel(name);
-    H_Layout->addWidget(Namelabel);
-    Valuelabel = new QLabel(value);
-    H_Layout->addWidget(Valuelabel);
-    setLayout(H_Layout);
+    Name  = name;
+    Value = value;
+    //Set Widget Color
+    setColor(color);
 }
 
 void InfoWidget::setName(QString name)
 {
-    Namelabel->setText(name);
+    Name = name;
+    update();
 }
 
 void InfoWidget::setValue(int value)
 {
-    QString valueBuffer;
-    valueBuffer.setNum(value);
-    setValue(valueBuffer);
+    Value.setNum(value);
+    setValue(Value);
 }
 
 void InfoWidget::setValue(double value)
 {
-    QString valueBuffer;
-    valueBuffer.setNum(value);
-    setValue(valueBuffer);
+    Value.setNum(value);
+    setValue(Value);
 }
 
 void InfoWidget::setValue(QString value)
 {
-    Valuelabel->setText(value);
+    Value = value;
+    update();
 }
 
 QString InfoWidget::getValue()
 {
-    return Valuelabel->text();
+    return Value;
 }
+
+void InfoWidget::setColor(LColor color)
+{
+    labelColor = color;
+    QString path;
+    switch(labelColor)
+    {
+    case Blue:
+        path = ":/LBlue";
+        break;
+    case Green:
+        path = ":/LGreen";
+        break;
+    case Red:
+        path = ":/LRed";
+        break;
+    case Orenge:
+        path = ":/LOrenge";
+        break;
+    case Gold:
+        path = ":/LGold";
+        break;
+    case LightBlue:
+        path = ":/LLightBlue";
+        break;
+    case LightGreen:
+        path = ":/LLightGreen";
+        break;
+    case White:
+        path = ":/LWhite";
+        break;
+    case Purple:
+        path = ":/LPurple";
+        break;
+    case LightPurple:
+        path = ":/LLightPurple";
+        break;
+    }
+    LImage = QImage (path);
+}
+
+InfoWidget::LColor InfoWidget::getColor()
+{
+    return labelColor;
+}
+
+void InfoWidget::paintEvent(QPaintEvent * pe)
+{
+    //prepare
+    Q_UNUSED(pe);
+    QPainter painter(this);
+    painter.setRenderHint(QPainter::Antialiasing);
+    //Draw Background
+    painter.drawImage (QRect(0,0,width(),height()),LImage);
+    //Render Text
+    QFont writeFont("Oblivious font",8);
+    writeFont.setBold(true);
+    //painter.setFont(writeFont);
+    //painter.setPen(Qt::white);
+    painter.drawText (QRect(0,0,width(),height()),Qt::AlignCenter,Name + Value);
+
+    painter.setOpacity (1);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

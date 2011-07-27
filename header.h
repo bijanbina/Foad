@@ -44,7 +44,7 @@ You may contact the author by e-mail (bijan@binaee.ir) or postal mail
 #include <stdlib.h>
 #include <unistd.h>
 #include <dirent.h>
-#include <stdarg.h>
+#include <cstdarg>
 #include <errno.h>
 #include <sstream>
 #include <cstdlib>

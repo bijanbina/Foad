@@ -39,8 +39,10 @@ private slots:
 
 private:
     void WekaDo();
+    void createSandS();//Create Signal and Slot
+    void createMenu();
     void Info_Box();
-    int askComplex(int end);
+    int  askComplex(int end);
     void Warning(QString text);
     void OpenError(char *recordNum);
     void CreateLayout(bool newplot);
@@ -82,6 +84,10 @@ private:
     QAction  *A_SetDB;
     QAction  *A_SetRecord;
     QAction  *B_AskComplex;
+    QAction  *A_addDiz;
+    QAction  *A_setDiz;
+    QAction  *A_setAge;
+    QMenu    *NNMenu;
     //Plot
     QwtPlot       *myPlot;
     QwtPlot       *interceptPlot;
@@ -102,44 +108,44 @@ private:
     void pCurve();
     void tCurve();
     //EKG
-    int        mode;
-    EKG_atr    localFeature;
-    wekaWriter LWW;                     //Neural Network Train Data Constructor
-    ListRW     disList;                //Disease List
-    weka_data  localWeka;
-    vector<double> Signal;
-    EKGSignal sigReader;
-    int ventricularrate();
-    SigDetect InterCeptWindow;
+    int              mode;
+    EKG_atr          localFeature;
+    wekaWriter       LWW;                     //Neural Network Train Data Constructor
+    ListRW           disList;                //Disease List
+    weka_data        localWeka;
+    vector<double>   Signal;
+    EKGSignal        sigReader;
+    int              ventricularrate();
+    SigDetect        InterCeptWindow;
     vector<Ekg_Data> localInfo;
-    int InputFileSampleFrequency;
-    int EKG_age ,ADCZero ,ADCUnit;
+    int              InputFileSampleFrequency;
+    int              EKG_age ,ADCZero ,ADCUnit;
     //Gui
-    double Percentage , FileMarhale;
-    double filePercentage;
-    QPushButton *numbers;
-    QMessageBox *message;
-    QFileDialog *filebrowser;
-    QProgressBar *fileProgress;
-    QProgressBar *DBProgress;
-    QFrame *jodaKonnande;
-    QLabel *filePL;//File Progress Label
-    QLabel *dbPL;//Database Progress Label
-    QLabel *fLabel;//EKG Feuture Label
-    QGroupBox *fWidget;//EKG Feuture Widget
-    QWidget *BoxWidget;
-    GButton *startButton;
-    GButton *TimeButton;
-    GButton *RecordButton;
+    double           Percentage , FileMarhale;
+    double           filePercentage;
+    QPushButton     *numbers;
+    QMessageBox     *message;
+    QFileDialog     *filebrowser;
+    QProgressBar    *fileProgress;
+    QProgressBar    *DBProgress;
+    QGroupBox       *fWidget;//EKG Feuture Widget
+    QFrame          *jodaKonnande;
+    QLabel          *filePL;//File Progress Label
+    QLabel          *dbPL;//Database Progress Label
+    QLabel          *fLabel;//EKG Feuture Label
+    QWidget         *BoxWidget;
+    GButton         *startButton;
+    GButton         *ScanButton;
+    GButton         *RecordButton;
     //Signal Info
-    int SigTime;
-    QString SigRecord;
+    int              SigTime;
+    QString          SigRecord;
     //Scanner
-    QScan *Scanner;
+    QScan           *Scanner;
     //Image Processor
-    EKGImageP imageProc;
+    EKGImageP        imageProc;
     //Neural Network
-    NNframwork *NNWidget;
+    NNframwork      *NNWidget;
 };
 
 #endif // EKGWINDOW_H

@@ -5,12 +5,20 @@
   Revisions:
         07/21: Add new function(Train + signals + save)
         07/22: Add getLayerNum + getInputNum + getHiddenNeuronsNum + getOutputNeuronsNum
+        07/27: Create NNSetting Struct;
 */
 #ifndef EKGNN_H
 #define EKGNN_H
 #define UPDATE_PER_EPCOCH 10
 #include "qscan.h"
 
+struct NNSetting
+{
+    int HiddenNeuronsNum;
+    int LayerNum;
+    int OutputNeuronsNum;
+    int InputNeuronsNum;
+}
 
 class EKGNN : public QThread
 {

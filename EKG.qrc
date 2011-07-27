@@ -17,5 +17,15 @@
         <file alias="R1">Image/R1.png</file>
         <file alias="R2">Image/R2.png</file>
         <file alias="R3">Image/R3.png</file>
+        <file alias="LGold">Image/Gold.png</file>
+        <file alias="LGreen">Image/Green.png</file>
+        <file alias="LLightBlue">Image/LightBlue.png</file>
+        <file alias="LLightGreen">Image/LightGreen.png</file>
+        <file alias="LLightPurple">Image/LightPurple.png</file>
+        <file alias="LOrenge">Image/Orenge.png</file>
+        <file alias="LPurple">Image/Purple.png</file>
+        <file alias="LRed">Image/Red.png</file>
+        <file alias="LWhite">Image/White.png</file>
+        <file alias="LBlue">Image/Blue.png</file>
     </qresource>
 </RCC>

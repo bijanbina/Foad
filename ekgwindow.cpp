@@ -176,81 +176,23 @@ EKGWindow::EKGWindow(QWidget *parent) :QMainWindow(parent)
     numbers  = new QPushButton;
     NNWidget = new NNframwork;
     //ADD Menu
-    menu = new QMenuBar;
-    //menu->setLayoutDirection(Qt::RightToLeft);
-    setMenuBar(menu);
-    //File Menu
-    QMenu *FileMenu = menu->addMenu("File");
-    A_Start = FileMenu->addAction("Start");
-    A_Scan = FileMenu->addAction("Scan");
-    A_LoadImage = FileMenu->addAction("Open Image");
-    A_Save = FileMenu->addAction("Save Weka");
-    A_Save->setEnabled(false);
-    FileMenu->addSeparator();
-    A_Start_Train = FileMenu->addAction("Start Train!");
-    FileMenu->addSeparator();
-    //Mode Menu in File
-    QMenu *ModeMenu = FileMenu->addMenu("Mode");
-    A_InterMode = ModeMenu->addAction("Intercepting");
-    A_DiseaseMode = ModeMenu->addAction("Set Disease");
-    A_WekaMode = ModeMenu->addAction("Training Mode");
-    //set Checkable Modes
-    A_DiseaseMode->setCheckable(true);
-    A_InterMode->setCheckable(true);
-    A_WekaMode->setCheckable(true);
-
-    A_InterMode->setChecked(true);
-    FileMenu->addSeparator();
-    A_Quit = FileMenu->addAction("Quit");
-    //Plot Menu
-    QMenu *plotMenu = menu->addMenu("Plot");
-    A_Plot_show = plotMenu->addAction("Show Plot");
-    A_Ekg_signal = plotMenu->addAction("Ekg Signal");
-    A_Det_signal = plotMenu->addAction("Detected Signal");
-    A_Fil_signal = plotMenu->addAction("Show Feuture");
-
-    A_Plot_show->setCheckable(true);
-    A_Ekg_signal->setCheckable(true);
-    A_Det_signal->setCheckable(true);
-    A_Fil_signal->setCheckable(true);
-
-    A_Plot_show->setChecked(true);
-    A_Ekg_signal->setChecked(true);
-    A_Det_signal->setChecked(true);
-
-    q_curves = new QwtPlotCurve;
-    s_curves = new QwtPlotCurve;
-    r_curves = new QwtPlotCurve;
-    //Signal Menu
-    QMenu *SigMenu = menu->addMenu("Signal");
-    A_SetTime = SigMenu->addAction("Signal Time");
-    A_SetDB = SigMenu->addAction("Database Path");
-    A_SetRecord = SigMenu->addAction("Record Number");
-    B_AskComplex = SigMenu->addAction("Ask Complex Number");
-
-    B_AskComplex->setCheckable(true);
-    B_AskComplex->setChecked(ASKCOMPLEX);
-    //Ekg Menu
-    QMenu *EKGMenu = menu->addMenu("EKG");
-    QAction *A_addDiz = EKGMenu->addAction("Add Disease");
-    QAction *A_setDiz = EKGMenu->addAction("Set Disease");
-    QAction *A_setAge = EKGMenu->addAction("Set EKG Age");
+    createMenu();
     //Set Defualt Value
-    mode = 1;
-    SigTime = 20;
-    SigRecord = "100";
-    EKG_age = 30;
-    localFeature.P_amp = 0;
-    localFeature.Q_amp = 0;
-    localFeature.R_amp = 0;
-    localFeature.S_amp = 0;
-    localFeature.T_amp = 0;
-    localFeature.QT_interval = 0;
-    localFeature.PR_interval = 0;
+    mode                             = 1;
+    SigTime                          = 20;
+    SigRecord                        = "100";
+    EKG_age                          = 30;
+    localFeature.P_amp               = 0;
+    localFeature.Q_amp               = 0;
+    localFeature.R_amp               = 0;
+    localFeature.S_amp               = 0;
+    localFeature.T_amp               = 0;
+    localFeature.QT_interval         = 0;
+    localFeature.PR_interval         = 0;
     localFeature.QRScomplex_interval = 0;
-    localFeature.EKGpower = 0;
-    localFeature.Heart_beat_ven = 0;
-    localFeature.RR_interval = 0;
+    localFeature.EKGpower            = 0;
+    localFeature.Heart_beat_ven      = 0;
+    localFeature.RR_interval         = 0;
 
     //Plot
     myPlot = new QwtPlot();
@@ -268,7 +210,7 @@ EKGWindow::EKGWindow(QWidget *parent) :QMainWindow(parent)
     zoomer->setMousePattern(QwtEventPattern::MouseSelect3,Qt::RightButton);
 
     //Button
-    TimeButton = new GButton(GButton::Red,"Set Time");
+    ScanButton = new GButton(GButton::Red,"Scan");
     RecordButton = new GButton(GButton::Orenge,"Open Record");
 
     //Create Layout
@@ -282,27 +224,8 @@ EKGWindow::EKGWindow(QWidget *parent) :QMainWindow(parent)
                 current_geom.width(),current_geom.height());
     if (!disList.isExist())
             Warning("\nYou doesn't create a disease list\nfor do this go to EKG menu and click on \"Add Desase\"");
-    //Signal and slot connect
-    connect(A_Start_Train,SIGNAL(triggered(bool)),this,SLOT(A_TrainMode()));
-    connect(A_Quit,SIGNAL(triggered(bool)),this,SLOT(close()));
-    connect(A_SetDB,SIGNAL(triggered(bool)),this,SLOT(setDB_Path()));
-    connect(A_Save,SIGNAL(triggered(bool)),this,SLOT(A_Weka_Save()));
-    connect(A_Start,SIGNAL(triggered(bool)),this,SLOT(Detection_Click()));
-    connect(A_Plot_show,SIGNAL(triggered(bool)),this,SLOT(A_Plot_change()));
-    connect(A_Det_signal,SIGNAL(triggered(bool)),this,SLOT(A_Det_change()));
-    connect(A_Ekg_signal,SIGNAL(triggered(bool)),this,SLOT(A_Sig_change()));
-    connect(A_Fil_signal,SIGNAL(triggered(bool)),this,SLOT(A_Fil_change()));
-    connect(A_WekaMode,SIGNAL(triggered(bool)),this,SLOT(A_WekaMode_change()));
-    connect(A_InterMode,SIGNAL(triggered(bool)),this,SLOT(A_InterMode_change()));
-    connect(A_DiseaseMode,SIGNAL(triggered(bool)),this,SLOT(A_DiseaseMode_change()));
-    connect(A_SetRecord,SIGNAL(triggered(bool)),this,SLOT(setRecordNum()));
-    connect(A_SetTime,SIGNAL(triggered(bool)),this,SLOT(setSigTime()));
-    connect(A_setAge,SIGNAL(triggered(bool)),this,SLOT(setAge()));
-    connect(A_addDiz,SIGNAL(triggered(bool)),this,SLOT(addDisease()));
-    connect(A_setDiz,SIGNAL(triggered(bool)),this,SLOT(setDisease()));
-    connect(A_Scan,SIGNAL(triggered(bool)),this,SLOT(scan()));
-    connect(A_LoadImage,SIGNAL(triggered(bool)),this,SLOT(openImage()));
-    connect(Scanner,SIGNAL(scanFinished()),this,SLOT(scanFinished()));
+    //connect Signal and slot
+    createSandS();
     Percentage = 0;
 }
 void EKGWindow::A_Fil_change()
@@ -355,6 +278,7 @@ void EKGWindow::A_Det_change()
 }
 void EKGWindow::A_TrainMode()
 {
+    NNMenu->setEnabled(true);
     setCentralWidget(NNWidget);
 }
 void EKGWindow::A_InterMode_change()
@@ -597,6 +521,162 @@ void EKGWindow::openTrain()
         SigRecord = recordFile.baseName();
     }
 }
+void EKGWindow::createSandS()
+{
+    connect(A_Start_Train,SIGNAL(triggered(bool)),this,SLOT(A_TrainMode()));
+    connect(A_Quit,       SIGNAL(triggered(bool)),this,SLOT(close()));
+    connect(A_SetDB,      SIGNAL(triggered(bool)),this,SLOT(setDB_Path()));
+    connect(A_Save,       SIGNAL(triggered(bool)),this,SLOT(A_Weka_Save()));
+    connect(A_Start,      SIGNAL(triggered(bool)),this,SLOT(Detection_Click()));
+    connect(A_Plot_show,  SIGNAL(triggered(bool)),this,SLOT(A_Plot_change()));
+    connect(A_Det_signal, SIGNAL(triggered(bool)),this,SLOT(A_Det_change()));
+    connect(A_Ekg_signal, SIGNAL(triggered(bool)),this,SLOT(A_Sig_change()));
+    connect(A_Fil_signal, SIGNAL(triggered(bool)),this,SLOT(A_Fil_change()));
+    connect(A_WekaMode,   SIGNAL(triggered(bool)),this,SLOT(A_WekaMode_change()));
+    connect(A_InterMode,  SIGNAL(triggered(bool)),this,SLOT(A_InterMode_change()));
+    connect(A_DiseaseMode,SIGNAL(triggered(bool)),this,SLOT(A_DiseaseMode_change()));
+    connect(A_SetRecord,  SIGNAL(triggered(bool)),this,SLOT(setRecordNum()));
+    connect(A_SetTime,    SIGNAL(triggered(bool)),this,SLOT(setSigTime()));
+    connect(A_setAge,     SIGNAL(triggered(bool)),this,SLOT(setAge()));
+    connect(A_addDiz,     SIGNAL(triggered(bool)),this,SLOT(addDisease()));
+    connect(A_setDiz,     SIGNAL(triggered(bool)),this,SLOT(setDisease()));
+    connect(A_Scan,       SIGNAL(triggered(bool)),this,SLOT(scan()));
+    connect(A_LoadImage,  SIGNAL(triggered(bool)),this,SLOT(openImage()));
+    connect(Scanner,      SIGNAL(scanFinished()),this,SLOT(scanFinished()));
+}
+void EKGWindow::createMenu()
+{
+    menu = new QMenuBar;
+    //menu->setLayoutDirection(Qt::RightToLeft);
+    setMenuBar(menu);
+    //File Menu
+    QMenu *FileMenu = menu->addMenu("File");
+    A_Start = FileMenu->addAction("Start");
+    A_Scan = FileMenu->addAction("Scan");
+    A_LoadImage = FileMenu->addAction("Open Image");
+    A_Save = FileMenu->addAction("Save Weka");
+    A_Save->setEnabled(false);
+    FileMenu->addSeparator();
+    A_Start_Train = FileMenu->addAction("Go Train Framwork!");
+    FileMenu->addSeparator();
+    //Mode Menu in File
+    QMenu *ModeMenu = FileMenu->addMenu("Mode");
+    A_InterMode = ModeMenu->addAction("Intercepting");
+    A_DiseaseMode = ModeMenu->addAction("Set Disease");
+    A_WekaMode = ModeMenu->addAction("Training Mode");
+    //set Checkable Modes
+    A_DiseaseMode->setCheckable(true);
+    A_InterMode->setCheckable(true);
+    A_WekaMode->setCheckable(true);
+
+    A_InterMode->setChecked(true);
+    FileMenu->addSeparator();
+    A_Quit = FileMenu->addAction("Quit");
+    //Plot Menu
+    QMenu *plotMenu = menu->addMenu("Plot");
+    A_Plot_show = plotMenu->addAction("Show Plot");
+    A_Ekg_signal = plotMenu->addAction("Ekg Signal");
+    A_Det_signal = plotMenu->addAction("Detected Signal");
+    A_Fil_signal = plotMenu->addAction("Show Feuture");
+
+    A_Plot_show->setCheckable(true);
+    A_Ekg_signal->setCheckable(true);
+    A_Det_signal->setCheckable(true);
+    A_Fil_signal->setCheckable(true);
+
+    A_Plot_show->setChecked(true);
+    A_Ekg_signal->setChecked(true);
+    A_Det_signal->setChecked(true);
+    //Signal Menu
+    QMenu *SigMenu = menu->addMenu("Signal");
+    A_SetTime = SigMenu->addAction("Signal Time");
+    A_SetDB = SigMenu->addAction("Database Path");
+    A_SetRecord = SigMenu->addAction("Record Number");
+    B_AskComplex = SigMenu->addAction("Ask Complex Number");
+
+    B_AskComplex->setCheckable(true);
+    B_AskComplex->setChecked(ASKCOMPLEX);
+    //Ekg Menu
+    QMenu *EKGMenu = menu->addMenu("EKG");
+    A_addDiz = EKGMenu->addAction("Add Disease");
+    A_setDiz = EKGMenu->addAction("Set Disease");
+    A_setAge = EKGMenu->addAction("Set EKG Age");
+    //Neural Network Menu
+    NNMenu   = NNWidget->getMenu();
+    menu->addMenu(NNMenu);
+    NNMenu->setEnabled(false);
+}
+void EKGWindow::Info_Box()
+{
+    BoxWidget = new QWidget;
+    QGridLayout *box_layout = new QGridLayout;
+    int i = 0;
+    createInfo("Record:",SigRecord);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("Signal Time:",SigTime);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("Patient Age:",EKG_age);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("P Amplitude:",localFeature.P_amp);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("Q Amplitude:",localFeature.Q_amp);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("R Amplitude:",localFeature.R_amp);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("S Amplitude:",localFeature.S_amp);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("T Amplitude:",localFeature.T_amp);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("QT:",localFeature.QT_interval);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("PR:",localFeature.PR_interval);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("QRS Width:",localFeature.QRScomplex_interval);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("EKGpower:",localFeature.EKGpower);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("Heart Beat:",localFeature.Heart_beat_ven);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("RR:",localFeature.RR_interval);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+    createInfo("Disease:",localWeka.disease);
+    box_layout->addWidget(fWidget,i/3,i%3);
+    i++;
+
+    ScanButton = new GButton(GButton::Red,"Scan");
+    RecordButton = new GButton(GButton::Orenge,"Open Record");
+    startButton = new GButton(GButton::Green,"Start");
+
+    connect(startButton,SIGNAL(click()),this,SLOT(Detection_Click()));
+    connect(RecordButton,SIGNAL(click()),this,SLOT(openRecord()));
+    connect(ScanButton,SIGNAL(click()),this,SLOT(scan()));
+
+    box_layout->addWidget(ScanButton,i/3,i%3);
+    i++;
+
+    box_layout->addWidget(RecordButton,i/3,i%3);
+    i++;
+
+    box_layout->addWidget(startButton,i/3,i%3);
+    i++;
+
+    box_layout->setVerticalSpacing(5);
+    BoxWidget->setLayout(box_layout);
+}
 /*--------------------------------------------------------------------------------------------
 |                                  Signal Proccessing                                         |
 ---------------------------------------------------------------------------------------------*/
@@ -758,77 +838,6 @@ void EKGWindow::WekaDo()
     }
     update();
     fileProgress->setValue(100);
-}
-void EKGWindow::Info_Box()
-{
-    BoxWidget = new QWidget;
-    QGridLayout *box_layout = new QGridLayout;
-    int i = 0;
-    createInfo("Record:",SigRecord);
-    box_layout->addWidget(fWidget,i/3,i%3);
-    i++;
-    createInfo("Signal Time:",SigTime);
-    box_layout->addWidget(fWidget,i/3,i%3);
-    i++;
-    createInfo("Patient Age:",EKG_age);
-    box_layout->addWidget(fWidget,i/3,i%3);
-    i++;
-    createInfo("P Amplitude:",localFeature.P_amp);
-    box_layout->addWidget(fWidget,i/3,i%3);
-    i++;
-    createInfo("Q Amplitude:",localFeature.Q_amp);
-    box_layout->addWidget(fWidget,i/3,i%3);
-    i++;
-    createInfo("R Amplitude:",localFeature.R_amp);
-    box_layout->addWidget(fWidget,i/3,i%3);
-    i++;
-    createInfo("S Amplitude:",localFeature.S_amp);
-    box_layout->addWidget(fWidget,i/3,i%3);
-    i++;
-    createInfo("T Amplitude:",localFeature.T_amp);
-    box_layout->addWidget(fWidget,i/3,i%3);
-    i++;
-    createInfo("QT:",localFeature.QT_interval);
-    box_layout->addWidget(fWidget,i/3,i%3);
-    i++;
-    createInfo("PR:",localFeature.PR_interval);
-    box_layout->addWidget(fWidget,i/3,i%3);
-    i++;
-    createInfo("QRS Width:",localFeature.QRScomplex_interval);
-    box_layout->addWidget(fWidget,i/3,i%3);
-    i++;
-    createInfo("EKGpower:",localFeature.EKGpower);
-    box_layout->addWidget(fWidget,i/3,i%3);
-    i++;
-    createInfo("Heart Beat:",localFeature.Heart_beat_ven);
-    box_layout->addWidget(fWidget,i/3,i%3);
-    i++;
-    createInfo("RR:",localFeature.RR_interval);
-    box_layout->addWidget(fWidget,i/3,i%3);
-    i++;
-    createInfo("Disease:",localWeka.disease);
-    box_layout->addWidget(fWidget,i/3,i%3);
-    i++;
-
-    TimeButton = new GButton(GButton::Red,"Set Time");
-    RecordButton = new GButton(GButton::Orenge,"Open Record");
-    startButton = new GButton(GButton::Green,"Start");
-
-    connect(startButton,SIGNAL(click()),this,SLOT(Detection_Click()));
-    connect(RecordButton,SIGNAL(click()),this,SLOT(openRecord()));
-    connect(TimeButton,SIGNAL(click()),this,SLOT(setSigTime()));
-
-    box_layout->addWidget(TimeButton,i/3,i%3);
-    i++;
-
-    box_layout->addWidget(RecordButton,i/3,i%3);
-    i++;
-
-    box_layout->addWidget(startButton,i/3,i%3);
-    i++;
-
-    box_layout->setVerticalSpacing(5);
-    BoxWidget->setLayout(box_layout);
 }
 /*--------------------------------------------------------------------------------------------
 |                                   Menu And Dialog                                          |

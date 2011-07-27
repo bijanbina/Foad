@@ -20,6 +20,8 @@ NNframwork::NNframwork(QWidget *parent) :
     Mlayout->setStretch(0,3);
     Mlayout->setStretch(1,1);
     setLayout(Mlayout);
+    //Menu
+    createMenu();
     //Signal And Slot
     createConnection();
 }
@@ -29,15 +31,16 @@ void NNframwork::createInfo()
     TrainBtn           = new GButton(GButton::Orenge,"Start Train");
     OpenBtn            = new GButton(GButton::Green,"Open Neural Network");
     SaveBtn            = new GButton(GButton::Blue,"Save Neural Network");
-    i_lastE            = new InfoWidget("Last Error : ","");
-    i_inputNNum        = new InfoWidget("Input Neurons Number : ","");
-    i_outputNNum       = new InfoWidget("Output Neurons Number : ","");
-    i_hiddentNN        = new InfoWidget("Hidden Neurons Number : ","");
-    i_EpochNum         = new InfoWidget("Epoch Number : ","");
-    i_HiddenAF         = new InfoWidget("Hidden Layer\nActivation Function : ","");
-    i_OutputAF         = new InfoWidget("Output Layer\nActivation Function : ","");
-    i_learningRate     = new InfoWidget("learning Rate : ","");
-    i_learningMomentum = new InfoWidget("learning Momentum : ","");
+    i_lastE            = new InfoWidget("Last Error : ","",InfoWidget::LightGreen);
+    i_inputNNum        = new InfoWidget("Input Neurons Number : ","",InfoWidget::White);
+    i_outputNNum       = new InfoWidget("Output Neurons Number : ","",InfoWidget::White);
+    i_hiddentNN        = new InfoWidget("Hidden Neurons Number : ","",InfoWidget::White);
+    i_EpochNum         = new InfoWidget("Epoch Number : ","",InfoWidget::Orenge);
+    i_HiddenAF         = new InfoWidget("Hidden Layer\nActivation Function : ","",InfoWidget::LightBlue);
+    i_OutputAF         = new InfoWidget("Output Layer\nActivation Function : ","",InfoWidget::LightBlue);
+    i_learningRate     = new InfoWidget("learning Rate : ","",InfoWidget::LightGreen);
+    i_learningMomentum = new InfoWidget("learning Momentum : ","",InfoWidget::Orenge);
+
     //Add Widget To layout
     info_layout->addWidget(i_inputNNum,0,0);
     info_layout->addWidget(i_learningMomentum,0,1);
@@ -58,10 +61,18 @@ void NNframwork::createInfo()
 
 void NNframwork::createConnection()
 {
-    connect(LocalNN,SIGNAL(report(double)),this,SLOT(updateEpoch(double)));
-    connect(OpenBtn,SIGNAL(click()),this,SLOT(openClicked()));
-    connect(SaveBtn,SIGNAL(click()),this,SLOT(SaveClicked()));
-    connect(TrainBtn,SIGNAL(click()),this,SLOT(TrainClicked()));
+    connect(LocalNN,           SIGNAL(report(double)),this,SLOT(updateEpoch(double)));
+    connect(OpenBtn,           SIGNAL(click()),this,SLOT(openClicked()));
+    connect(SaveBtn,           SIGNAL(click()),this,SLOT(SaveClicked()));
+    connect(TrainBtn,          SIGNAL(click()),this,SLOT(TrainClicked()));
+    connect(A_EpochNum,        SIGNAL(triggered()),this,SLOT(askEpochNum()));
+    connect(A_learningRate,    SIGNAL(triggered()),this,SLOT(asklearningRate()));
+    connect(A_learningMomentum,SIGNAL(triggered()),this,SLOT(asklearningMomentum()));
+    connect(A_inputNNum,       SIGNAL(triggered()),this,SLOT(askinputNNum()));
+    connect(A_outputNNum,      SIGNAL(triggered()),this,SLOT(askoutputNNum()));
+    connect(A_hiddentNN,       SIGNAL(triggered()),this,SLOT(askhiddentNN()));
+    connect(A_HiddenAF,        SIGNAL(triggered()),this,SLOT(askHiddenAF()));
+    connect(A_OutputAF,        SIGNAL(triggered()),this,SLOT(askOutputAF()));
 }
 
 void NNframwork::updateEpoch(double value)
@@ -69,12 +80,8 @@ void NNframwork::updateEpoch(double value)
     EpochNum += UPDATE_PER_EPCOCH;
     i_lastE->setValue(value);
     i_EpochNum->setValue(EpochNum);
-    int k =pow(UPDATE_PER_EPCOCH,2);
-    //if (EpochNum % k == 0)
-    //{
-        EpochError.push_back(value);
-        plot(EpochError);
-    //}
+    EpochError.push_back(value);
+    plot(EpochError);
 }
 
 void NNframwork::openClicked()
@@ -150,11 +157,8 @@ void NNframwork::plot(vector<double> data)
         X[i] = i * UPDATE_PER_EPCOCH;
         Y[i] = data[i];
     }
-    //--------copy the data into the curves------------
+    //--------update curves data------------
     Train_curves->setData(X,Y,length);
-
-    //------------- Attach Curves -------------------
-
     // finally, refresh the plot
     myPlot->replot();
 }
@@ -163,7 +167,7 @@ void NNframwork::PlotConfig(QString plotName,int xSize)
 {
     myPlot->setTitle(plotName);
     myPlot->setAxisTitle(myPlot->xBottom, "Epoch Number");
-    myPlot->setAxisTitle(myPlot->yLeft, "Error");
+    myPlot->setAxisTitle(myPlot->yLeft, "Correctly Classified Instances");
     myPlot->canvas()->setFrameStyle(0);
     myPlot->setCanvasBackground(QColor(255,255,255));
     //------------- Set Axis Scale-------------------
@@ -188,9 +192,75 @@ void NNframwork::PlotConfig(QString plotName,int xSize)
     Train_curves->attach(myPlot);
 }
 
+void NNframwork::createMenu()
+{
+    A_EpochNum         = NNMenu->addAction("Set Epoch Count");
+    A_learningRate     = NNMenu->addAction("Set Learning Rate");
+    A_learningMomentum = NNMenu->addAction("Set Learning Momentom");
+    A_inputNNum        = NNMenu->addAction("Set Input Neurons Number");
+    A_outputNNum       = NNMenu->addAction("Set Output Neurons Number");
+    A_hiddentNN        = NNMenu->addAction("Set Hidden Neurons Number");
+    A_HiddenAF         = NNMenu->addAction("Set Hidden Layer Activation Function");
+    A_OutputAF         = NNMenu->addAction("Set Output Layer Activation Function");
+}
 
+void NNframwork::askEpochNum()
+{
+    bool ok;
+    int i = QInputDialog::getInt(this, "Set Epoch Count","Epoch", EpochCount, 0, 100000, 1, &ok);
+    if (ok)
+        EpochCount = i;
+}
 
+void NNframwork::asklearningRate()
+{
+    bool ok;
+    double i = QInputDialog::getDouble(this, "Set Learning Rate","Learning Rate", EpochCount, 0, 1, 1, &ok);
+    if (ok)
+        EpochCount = i;
+}
 
+void NNframwork::asklearningMomentum()
+{
+    bool ok;
+    double i = QInputDialog::getDouble(this, "Set Learning Momentom","Learning Momentom", EpochCount, 0, 1, 1, &ok);
+    if (ok)
+        EpochCount = i;
+}
+
+void NNframwork::askinputNNum()
+{
+    bool ok;
+    int i = QInputDialog::getInt(this, "Set Input Neurons Number","Neurons Number", EpochCount, 0, 100000, 1, &ok);
+    if (ok)
+        EpochCount = i;
+}
+
+void NNframwork::askoutputNNum()
+{
+    bool ok;
+    int i = QInputDialog::getInt(this, "Set Output Neurons Number","Neurons Number", EpochCount, 0, 100000, 1, &ok);
+    if (ok)
+        EpochCount = i;
+}
+
+void NNframwork::askhiddentNN()
+{
+    bool ok;
+    int i = QInputDialog::getInt(this, "Set Hidden Neurons Number","Neurons Number", EpochCount, 0, 100000, 1, &ok);
+    if (ok)
+        EpochCount = i;
+}
+
+void NNframwork::askHiddenAF()
+{
+
+}
+
+void NNframwork::askOutputAF()
+{
+
+}
 
 
 

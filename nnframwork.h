@@ -42,6 +42,14 @@ public:
     explicit NNframwork(QWidget *parent = 0);
     QMenu   *getMenu();
 private slots:
+    void askEpochNum();
+    void asklearningRate();
+    void asklearningMomentum();
+    void askinputNNum();
+    void askoutputNNum();
+    void askhiddentNN();
+    void askHiddenAF();
+    void askOutputAF();
     void openClicked();
     void SaveClicked();
     void TrainClicked();
@@ -51,8 +59,8 @@ private:
     void plot(vector<double> data);
     void PlotConfig(QString plotName,int xSize);
     void Warning(QString text);
-    void MakeCenter(QFileDialog *dia);
     void createLayout();
+    void createMenu();
     void createInfo();
     void createConnection();
     //Plot
@@ -64,7 +72,7 @@ private:
     QVBoxLayout   *Mlayout;                      //Main Layout
     InfoWidget    *i_lastE;
     InfoWidget    *i_inputNNum;
-    InfoWidget     *i_outputNNum;
+    InfoWidget    *i_outputNNum;
     InfoWidget    *i_hiddentNN;
     InfoWidget    *i_EpochNum;
     InfoWidget    *i_HiddenAF;     //Hidden Activation Function
@@ -74,6 +82,15 @@ private:
     GButton       *TrainBtn;
     GButton       *OpenBtn;
     GButton       *SaveBtn;
+    //Menu
+    QAction       *A_inputNNum;
+    QAction       *A_outputNNum;
+    QAction       *A_hiddentNN;
+    QAction       *A_EpochNum;
+    QAction       *A_HiddenAF;     //Hidden Activation Function
+    QAction       *A_OutputAF;     //Hidden Activation Function
+    QAction       *A_learningRate;
+    QAction       *A_learningMomentum;
     //Neural Network
     EKGNN         *LocalNN;
     int            EpochNum;
