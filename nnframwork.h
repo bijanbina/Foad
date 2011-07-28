@@ -47,7 +47,7 @@ private slots:
     void asklearningMomentum();
     void askinputNNum();
     void askoutputNNum();
-    void askhiddentNN();
+    void askhiddenNN();
     void askHiddenAF();
     void askOutputAF();
     void openClicked();
@@ -56,13 +56,14 @@ private slots:
     void updateEpoch(double value);
 private:
     //Function
-    void plot(vector<double> data);
-    void PlotConfig(QString plotName,int xSize);
-    void Warning(QString text);
-    void createLayout();
     void createMenu();
     void createInfo();
+    void UpdateData();
+    void createLayout();
     void createConnection();
+    void Warning(QString text);
+    void plot(vector<double> data);
+    void PlotConfig(QString plotName,int xSize);
     //Plot
     QwtPlot       *myPlot;
     QwtPlotCurve  *Train_curves;
@@ -96,6 +97,7 @@ private:
     int            EpochNum;
     int            EpochCount;
     vector<double> EpochError;
+    NNSetting      NNParametr;
     //Menu
     QMenu        *NNMenu;
 

@@ -24,6 +24,7 @@ void EKGNN::Train(QString path,int epoch)
 void EKGNN::open(QString path)
 {
     ann = fann_create_from_file(path.toStdString().c_str());
+    getSetting();
     isStarted = true;
 }
 
@@ -58,6 +59,20 @@ void EKGNN::save(QString path)
 void EKGNN::create(int num_layers, int num_input,int num_neurons_hidden,int num_output)
 {
     ann = fann_create_standard(num_layers, num_input, num_neurons_hidden, num_output);
+    getSetting();
+    isStarted = true;
+}
+
+void EKGNN::create(NNSetting parm)
+{
+    //Create
+    ann = fann_create_standard(parm.LayerNum, parm.InputNeuronsNum, parm.HiddenNeuronsNum, parm.OutputNeuronsNum);
+    setLearningRate(parm.LearningRate);
+    setLearningMomentum(parm.LearningMomentum);
+    setHiddenAF(parm.HiddenAF);
+    setOutputAF(parm.OutputAF);
+    //Update
+    getSetting();
     isStarted = true;
 }
 
@@ -105,11 +120,25 @@ double EKGNN::getLearningRate()
     return fann_get_learning_rate(ann);
 }
 
-double EKGNN::getlearningMomentum()
+double EKGNN::getLearningMomentum()
 {
     if(!isStarted)
         return 0;
     return fann_get_learning_momentum(ann);
+}
+
+void EKGNN::setLearningRate(double Learning_Rate)
+{
+    if(!isStarted)
+        return ;
+    fann_set_learning_rate(ann,Learning_Rate);
+}
+
+void EKGNN::setLearningMomentum(double Learning_Momentom)
+{
+    if(!isStarted)
+        return ;
+    fann_set_learning_momentum(ann,Learning_Momentom);
 }
 
 bool EKGNN::operator!()
@@ -124,6 +153,8 @@ bool EKGNN::Started()
 
 QString EKGNN::getHiddenAF()
 {
+    if(!isStarted)
+        return "";
     int a = fann_get_activation_function(ann,1,0);
     QString returnData;
     switch (a)
@@ -188,6 +219,8 @@ QString EKGNN::getHiddenAF()
 
 QString EKGNN::getOutputAF()
 {
+    if(!isStarted)
+        return "";
     int layerNum = getLayerNum();
     int a = fann_get_activation_function(ann,layerNum - 1,0);
     QString returnData;
@@ -253,6 +286,8 @@ QString EKGNN::getOutputAF()
 
 void EKGNN::run()
 {
+    if(!isStarted)
+        return ;
     fann_train_data *data = fann_read_train_from_file(trainPatch);
     //Start Learn
     for(int i =0;i<epochNum;i++)
@@ -263,6 +298,95 @@ void EKGNN::run()
     }
 
 }
+
+AF_Enum EKGNN::getHiddenAF_Enum()
+{
+    if(!isStarted)
+        return (AF_Enum)0;
+    return fann_get_activation_function(ann,1,0);
+}
+
+AF_Enum EKGNN::getOutputAF_Enum()
+{
+    if(!isStarted)
+        return (AF_Enum)0;
+    int layerNum = getLayerNum();
+    return fann_get_activation_function(ann,layerNum - 1,0);
+}
+
+void EKGNN::setHiddenAF(AF_Enum AF)
+{
+    if(!isStarted)
+        return ;
+    fann_set_activation_function_hidden(ann,AF);
+}
+
+void EKGNN::setOutputAF(AF_Enum AF)
+{
+    if(!isStarted)
+        return ;
+    fann_set_activation_function_hidden(ann,AF);
+}
+
+NNSetting EKGNN::getSetting()
+{
+    Parametr.HiddenAF           = getHiddenAF_Enum();
+    Parametr.HiddenAFName       = getHiddenAF();
+    Parametr.HiddenNeuronsNum   = getHiddenNeuronsNum();
+    Parametr.InputNeuronsNum    = getInputNum();
+    Parametr.LayerNum           = getLayerNum();
+    Parametr.LearningMomentum   = getLearningMomentum();
+    Parametr.LearningRate       = getLearningRate();
+    Parametr.OutputAF           = getOutputAF_Enum();
+    Parametr.OutputAFName       = getOutputAF();
+    Parametr.OutputNeuronsNum   = getOutputNeuronsNum();
+    return Parametr;
+}
+
+QStringList EKGNN::getAFlist()
+{
+    QStringList returnBuffer;
+    //Fill list
+    returnBuffer << "Linear";
+    returnBuffer << "Treshold";
+    returnBuffer << "Treshold Symmetric";
+    returnBuffer << "Sigmoid";
+    returnBuffer << "Sigmoid Stepwise";
+    returnBuffer << "Sigmoid Symmetric";
+    returnBuffer << "Sigmoid Symmetric Stepwise";
+    returnBuffer << "Gaussian";
+    returnBuffer << "Gaussian Symmetric";
+    returnBuffer << "Gaussian Stepwise";
+    returnBuffer << "Elliot";
+    returnBuffer << "Elliot Symmetric";
+    returnBuffer << "Linear Piece";
+    returnBuffer << "Linear Symmetric";
+    returnBuffer << "Sinus Symmetric";
+    returnBuffer << "Cosinus Symmetric";
+    returnBuffer << "Sinus";
+    returnBuffer << "Cosinus";
+
+    return returnBuffer;
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

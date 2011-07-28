@@ -93,15 +93,8 @@ void NNframwork::openClicked()
     if(!path.isEmpty())
     {
         LocalNN->open(path);
-        i_inputNNum->setValue(LocalNN->getInputNum());
-        i_outputNNum->setValue(LocalNN->getOutputNeuronsNum());
-        i_hiddentNN->setValue(LocalNN->getHiddenNeuronsNum());
-        i_HiddenAF->setValue(LocalNN->getHiddenAF());
-        i_OutputAF->setValue(LocalNN->getOutputAF());
-        i_learningRate->setValue(LocalNN->getLearningRate());
-        i_learningMomentum->setValue(LocalNN->getlearningMomentum());
-        i_lastE->setValue(0);
-        i_EpochNum->setValue(0);
+        NNParametr = LocalNN->getSetting();
+        UpdateData();
     }
 }
 
@@ -217,7 +210,11 @@ void NNframwork::asklearningRate()
     bool ok;
     double i = QInputDialog::getDouble(this, "Set Learning Rate","Learning Rate", EpochCount, 0, 1, 1, &ok);
     if (ok)
-        EpochCount = i;
+    {
+        NNParametr.LearningRate = i;
+        LocalNN->setLearningRate(NNParametr.LearningRate);
+        UpdateData();
+    }
 }
 
 void NNframwork::asklearningMomentum()
@@ -225,7 +222,11 @@ void NNframwork::asklearningMomentum()
     bool ok;
     double i = QInputDialog::getDouble(this, "Set Learning Momentom","Learning Momentom", EpochCount, 0, 1, 1, &ok);
     if (ok)
-        EpochCount = i;
+    {
+        NNParametr.LearningMomentum = i;
+        LocalNN->setLearningMomentum(NNParametr.LearningMomentum);
+        UpdateData();
+    }
 }
 
 void NNframwork::askinputNNum()
@@ -233,7 +234,10 @@ void NNframwork::askinputNNum()
     bool ok;
     int i = QInputDialog::getInt(this, "Set Input Neurons Number","Neurons Number", EpochCount, 0, 100000, 1, &ok);
     if (ok)
-        EpochCount = i;
+    {
+        NNParametr.InputNeuronsNum = i;
+        Warning("This value make effective if you recreate your Neural network");
+    }
 }
 
 void NNframwork::askoutputNNum()
@@ -241,28 +245,65 @@ void NNframwork::askoutputNNum()
     bool ok;
     int i = QInputDialog::getInt(this, "Set Output Neurons Number","Neurons Number", EpochCount, 0, 100000, 1, &ok);
     if (ok)
-        EpochCount = i;
+    {
+        NNParametr.OutputNeuronsNum = i;
+        Warning("This value make effective if you recreate your Neural network");
+    }
 }
 
-void NNframwork::askhiddentNN()
+void NNframwork::askhiddenNN()
 {
     bool ok;
     int i = QInputDialog::getInt(this, "Set Hidden Neurons Number","Neurons Number", EpochCount, 0, 100000, 1, &ok);
     if (ok)
-        EpochCount = i;
+    {
+        NNParametr.HiddenNeuronsNum = i;
+        Warning("This value make effective if you recreate your Neural network");
+    }
 }
 
 void NNframwork::askHiddenAF()
 {
-
+    bool ok;
+    QString title = "set Hidden Activation Function";
+    QString Label = "Activation Function:";
+    QStringList items = LocalNN->getAFlist();
+    QString item = QInputDialog::getItem(this, title,Label, items, 0, false, &ok);
+    if(ok)
+    {
+        NNParametr.HiddenAF = (AF_Enum)items.indexOf(item);
+        LocalNN->setHiddenAF(NNParametr.HiddenAF);
+        UpdateData();
+    }
 }
 
 void NNframwork::askOutputAF()
 {
-
+    bool ok;
+    QString title = "set Output Activation Function";
+    QString Label = "Activation Function:";
+    QStringList items = LocalNN->getAFlist();
+    QString item = QInputDialog::getItem(this, title,Label, items, 0, false, &ok);
+    if(ok)
+    {
+        NNParametr.OutputAF = (AF_Enum)items.indexOf(item);
+        LocalNN->setOutputAF(NNParametr.OutputAF);
+        UpdateData();
+    }
 }
 
-
+void NNframwork::UpdateData()
+{
+    i_inputNNum->setValue(LocalNN->getInputNum());
+    i_outputNNum->setValue(LocalNN->getOutputNeuronsNum());
+    i_hiddentNN->setValue(LocalNN->getHiddenNeuronsNum());
+    i_HiddenAF->setValue(LocalNN->getHiddenAF());
+    i_OutputAF->setValue(LocalNN->getOutputAF());
+    i_learningRate->setValue(LocalNN->getLearningRate());
+    i_learningMomentum->setValue(LocalNN->getLearningMomentum());
+    i_lastE->setValue(0);
+    i_EpochNum->setValue(0);
+}
 
 
 

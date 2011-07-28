@@ -21,7 +21,6 @@ private slots:
     void addDisease();
     void setDisease();
     void A_Weka_Save();
-    void A_TrainMode();
     void setRecordNum();
     void A_Sig_change();
     void A_Det_change();
@@ -29,6 +28,7 @@ private slots:
     void A_Fil_change();
     void Detection_Click();
     void A_WekaMode_change();
+    void A_TrainMode_change();
     void A_InterMode_change();
     void A_DiseaseMode_change();
     void openTrain();
@@ -67,7 +67,7 @@ private:
     //Menu
     QMenuBar *menu;
     QAction  *A_Ekg_signal;
-    QAction  *A_Start_Train;
+    QAction  *A_TrainMode;
     QAction  *A_Det_signal;
     QAction  *A_Fil_signal;
     QAction  *A_Plot_show;
@@ -87,6 +87,10 @@ private:
     QAction  *A_addDiz;
     QAction  *A_setDiz;
     QAction  *A_setAge;
+    QAction  *A_Content;
+    QAction  *A_Support;
+    QAction  *A_Update;
+    QAction  *A_About;
     QMenu    *NNMenu;
     //Plot
     QwtPlot       *myPlot;

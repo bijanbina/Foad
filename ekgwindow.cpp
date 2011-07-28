@@ -276,10 +276,28 @@ void EKGWindow::A_Det_change()
         Detect_curves->detach();
     myPlot->replot();
 }
-void EKGWindow::A_TrainMode()
+void EKGWindow::A_TrainMode_change()
 {
     NNMenu->setEnabled(true);
     setCentralWidget(NNWidget);
+    ///
+    mode = 4;
+    if (A_TrainMode->isChecked())
+    {
+        resize(WIDTH,HEIGHT);
+        QRect available_geom = QDesktopWidget().availableGeometry();
+        QRect current_geom = frameGeometry();
+        setGeometry(available_geom.width() / 2 - current_geom.width() / 2,
+                    available_geom.height() / 2 - current_geom.height() / 2,
+                    current_geom.width(),current_geom.height());
+        A_DiseaseMode->setChecked(false);
+        A_WekaMode->setChecked   (false);
+        A_InterMode->setChecked  (false);
+    }
+    else
+    {
+        A_InterMode->setChecked(true);
+    }
 }
 void EKGWindow::A_InterMode_change()
 {
@@ -294,7 +312,8 @@ void EKGWindow::A_InterMode_change()
                     available_geom.height() / 2 - current_geom.height() / 2,
                     current_geom.width(),current_geom.height());
         A_DiseaseMode->setChecked(false);
-        A_WekaMode->setChecked(false);
+        A_WekaMode->setChecked   (false);
+        A_TrainMode->setChecked  (false);
     }
     else
     {
@@ -319,6 +338,7 @@ void EKGWindow::A_DiseaseMode_change()
                     current_geom.width(),current_geom.height());
         A_InterMode->setChecked(false);
         A_WekaMode->setChecked(false);
+        A_TrainMode->setChecked  (false);
     }
     else
     {
@@ -341,6 +361,7 @@ void EKGWindow::A_WekaMode_change()
                     current_geom.width(),current_geom.height());
         A_InterMode->setChecked(false);
         A_DiseaseMode->setChecked(false);
+        A_TrainMode->setChecked  (false);
     }
     else
     {
@@ -523,7 +544,7 @@ void EKGWindow::openTrain()
 }
 void EKGWindow::createSandS()
 {
-    connect(A_Start_Train,SIGNAL(triggered(bool)),this,SLOT(A_TrainMode()));
+    connect(A_TrainMode,  SIGNAL(triggered(bool)),this,SLOT(A_TrainMode_change()));
     connect(A_Quit,       SIGNAL(triggered(bool)),this,SLOT(close()));
     connect(A_SetDB,      SIGNAL(triggered(bool)),this,SLOT(setDB_Path()));
     connect(A_Save,       SIGNAL(triggered(bool)),this,SLOT(A_Weka_Save()));
@@ -557,54 +578,61 @@ void EKGWindow::createMenu()
     A_Save = FileMenu->addAction("Save Weka");
     A_Save->setEnabled(false);
     FileMenu->addSeparator();
-    A_Start_Train = FileMenu->addAction("Go Train Framwork!");
     FileMenu->addSeparator();
     //Mode Menu in File
     QMenu *ModeMenu = FileMenu->addMenu("Mode");
-    A_InterMode = ModeMenu->addAction("Intercepting");
-    A_DiseaseMode = ModeMenu->addAction("Set Disease");
-    A_WekaMode = ModeMenu->addAction("Training Mode");
+    A_InterMode     = ModeMenu->addAction("Intercepting");
+    A_DiseaseMode   = ModeMenu->addAction("Set Disease");
+    A_WekaMode      = ModeMenu->addAction("Data Constructing");
+    A_TrainMode     = ModeMenu->addAction("Train Mode");
     //set Checkable Modes
     A_DiseaseMode->setCheckable(true);
-    A_InterMode->setCheckable(true);
-    A_WekaMode->setCheckable(true);
+    A_InterMode->setCheckable  (true);
+    A_WekaMode->setCheckable   (true);
+    A_TrainMode->setCheckable(true);
 
     A_InterMode->setChecked(true);
     FileMenu->addSeparator();
     A_Quit = FileMenu->addAction("Quit");
     //Plot Menu
     QMenu *plotMenu = menu->addMenu("Plot");
-    A_Plot_show = plotMenu->addAction("Show Plot");
-    A_Ekg_signal = plotMenu->addAction("Ekg Signal");
-    A_Det_signal = plotMenu->addAction("Detected Signal");
-    A_Fil_signal = plotMenu->addAction("Show Feuture");
+    A_Plot_show     = plotMenu->addAction("Show Plot");
+    A_Ekg_signal    = plotMenu->addAction("Ekg Signal");
+    A_Det_signal    = plotMenu->addAction("Detected Signal");
+    A_Fil_signal    = plotMenu->addAction("Show Feuture");
 
-    A_Plot_show->setCheckable(true);
+    A_Plot_show->setCheckable (true);
     A_Ekg_signal->setCheckable(true);
     A_Det_signal->setCheckable(true);
     A_Fil_signal->setCheckable(true);
 
-    A_Plot_show->setChecked(true);
+    A_Plot_show->setChecked (true);
     A_Ekg_signal->setChecked(true);
     A_Det_signal->setChecked(true);
     //Signal Menu
     QMenu *SigMenu = menu->addMenu("Signal");
-    A_SetTime = SigMenu->addAction("Signal Time");
-    A_SetDB = SigMenu->addAction("Database Path");
-    A_SetRecord = SigMenu->addAction("Record Number");
-    B_AskComplex = SigMenu->addAction("Ask Complex Number");
+    A_SetTime      = SigMenu->addAction("Signal Time");
+    A_SetDB        = SigMenu->addAction("Database Path");
+    A_SetRecord    = SigMenu->addAction("Record Number");
+    B_AskComplex   = SigMenu->addAction("Ask Complex Number");
 
     B_AskComplex->setCheckable(true);
     B_AskComplex->setChecked(ASKCOMPLEX);
     //Ekg Menu
     QMenu *EKGMenu = menu->addMenu("EKG");
-    A_addDiz = EKGMenu->addAction("Add Disease");
-    A_setDiz = EKGMenu->addAction("Set Disease");
-    A_setAge = EKGMenu->addAction("Set EKG Age");
+    A_addDiz       = EKGMenu->addAction("Add Disease");
+    A_setDiz       = EKGMenu->addAction("Set Disease");
+    A_setAge       = EKGMenu->addAction("Set EKG Age");
     //Neural Network Menu
     NNMenu   = NNWidget->getMenu();
     menu->addMenu(NNMenu);
     NNMenu->setEnabled(false);
+    //Help Menu
+    QMenu *HelpMenu = menu->addMenu("Help");
+    A_Content       = HelpMenu->addAction("Content");
+    A_Support       = HelpMenu->addAction("Suppot");
+    A_Update        = HelpMenu->addAction("Update");
+    A_About         = HelpMenu->addAction("About");
 }
 void EKGWindow::Info_Box()
 {
