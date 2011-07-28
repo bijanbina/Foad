@@ -12,7 +12,7 @@ NNframwork::NNframwork(QWidget *parent) :
     EpochCount = 2000;
     EpochNum   = 0;
     //Plot
-    PlotConfig("Neural Network Epoch Error",EpochCount);
+    PlotConfig("Neural Network Train Plot",EpochCount);
     //Layout
     createInfo();
     Mlayout->addWidget(myPlot);
@@ -148,7 +148,7 @@ void NNframwork::plot(vector<double> data)
     for (int i = 0 ; i < length;i++)
     {
         X[i] = i * UPDATE_PER_EPCOCH;
-        Y[i] = data[i];
+        Y[i] = 1 - data[i];
     }
     //--------update curves data------------
     Train_curves->setData(X,Y,length);
