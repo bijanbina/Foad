@@ -27,5 +27,7 @@
         <file alias="LRed">Image/Red.png</file>
         <file alias="LWhite">Image/White.png</file>
         <file alias="LBlue">Image/Blue.png</file>
+        <file alias="Splash">Image/Splash Screen.png</file>
+        <file alias="Mask">Image/Mask.png</file>
     </qresource>
 </RCC>

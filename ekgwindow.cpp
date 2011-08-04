@@ -193,7 +193,7 @@ EKGWindow::EKGWindow(QWidget *parent) :QMainWindow(parent)
     localFeature.EKGpower            = 0;
     localFeature.Heart_beat_ven      = 0;
     localFeature.RR_interval         = 0;
-
+    Percentage                       = 0;
     //Plot
     myPlot = new QwtPlot();
     EKG_Grid = new QwtPlotGrid();
@@ -226,7 +226,6 @@ EKGWindow::EKGWindow(QWidget *parent) :QMainWindow(parent)
             Warning("\nYou doesn't create a disease list\nfor do this go to EKG menu and click on \"Add Desase\"");
     //connect Signal and slot
     createSandS();
-    Percentage = 0;
 }
 void EKGWindow::A_Fil_change()
 {
@@ -275,98 +274,6 @@ void EKGWindow::A_Det_change()
     else
         Detect_curves->detach();
     myPlot->replot();
-}
-void EKGWindow::A_TrainMode_change()
-{
-    NNMenu->setEnabled(true);
-    setCentralWidget(NNWidget);
-    ///
-    mode = 4;
-    if (A_TrainMode->isChecked())
-    {
-        resize(WIDTH,HEIGHT);
-        QRect available_geom = QDesktopWidget().availableGeometry();
-        QRect current_geom = frameGeometry();
-        setGeometry(available_geom.width() / 2 - current_geom.width() / 2,
-                    available_geom.height() / 2 - current_geom.height() / 2,
-                    current_geom.width(),current_geom.height());
-        A_DiseaseMode->setChecked(false);
-        A_WekaMode->setChecked   (false);
-        A_InterMode->setChecked  (false);
-    }
-    else
-    {
-        A_InterMode->setChecked(true);
-    }
-}
-void EKGWindow::A_InterMode_change()
-{
-    mode = 1;
-    if (A_InterMode->isChecked())
-    {
-        //Change Size
-        resize(WIDTH,HEIGHT);
-        QRect available_geom = QDesktopWidget().availableGeometry();
-        QRect current_geom = frameGeometry();
-        setGeometry(available_geom.width() / 2 - current_geom.width() / 2,
-                    available_geom.height() / 2 - current_geom.height() / 2,
-                    current_geom.width(),current_geom.height());
-        A_DiseaseMode->setChecked(false);
-        A_WekaMode->setChecked   (false);
-        A_TrainMode->setChecked  (false);
-    }
-    else
-    {
-        A_WekaMode->setChecked(true);
-    }
-    CreateLayout(true);
-    //resize(WIDTH,HEIGHT);
-}
-void EKGWindow::A_DiseaseMode_change()
-{
-    mode = 2;
-    resize(600,400);
-    CreateLayout(true);
-    if (A_DiseaseMode->isChecked())
-    {
-        //Change Size
-        resize(600,400);
-        QRect available_geom = QDesktopWidget().availableGeometry();
-        QRect current_geom = frameGeometry();
-        setGeometry(available_geom.width() / 2 - current_geom.width() / 2,
-                    available_geom.height() / 2 - current_geom.height() / 2,
-                    current_geom.width(),current_geom.height());
-        A_InterMode->setChecked(false);
-        A_WekaMode->setChecked(false);
-        A_TrainMode->setChecked  (false);
-    }
-    else
-    {
-        A_InterMode->setChecked(true);
-    }
-}
-void EKGWindow::A_WekaMode_change()
-{
-    mode = 3;
-    resize(600,450);
-    CreateLayout(true);
-    if (A_WekaMode->isChecked())
-    {
-        //Change Size
-        resize(600,450);
-        QRect available_geom = QDesktopWidget().availableGeometry();
-        QRect current_geom = frameGeometry();
-        setGeometry(available_geom.width() / 2 - current_geom.width() / 2,
-                    available_geom.height() / 2 - current_geom.height() / 2,
-                    current_geom.width(),current_geom.height());
-        A_InterMode->setChecked(false);
-        A_DiseaseMode->setChecked(false);
-        A_TrainMode->setChecked  (false);
-    }
-    else
-    {
-        A_InterMode->setChecked(true);
-    }
 }
 void EKGWindow::A_Weka_Save()
 {
@@ -610,21 +517,21 @@ void EKGWindow::createMenu()
     A_Ekg_signal->setChecked(true);
     A_Det_signal->setChecked(true);
     //Signal Menu
-    QMenu *SigMenu = menu->addMenu("Signal");
-    A_SetTime      = SigMenu->addAction("Signal Time");
-    A_SetDB        = SigMenu->addAction("Database Path");
-    A_SetRecord    = SigMenu->addAction("Record Number");
-    B_AskComplex   = SigMenu->addAction("Ask Complex Number");
+    QMenu *SigMenu  = menu->addMenu("Signal");
+    A_SetTime       = SigMenu->addAction("Signal Time");
+    A_SetDB         = SigMenu->addAction("Database Path");
+    A_SetRecord     = SigMenu->addAction("Record Number");
+    B_AskComplex    = SigMenu->addAction("Ask Complex Number");
 
     B_AskComplex->setCheckable(true);
     B_AskComplex->setChecked(ASKCOMPLEX);
     //Ekg Menu
-    QMenu *EKGMenu = menu->addMenu("EKG");
-    A_addDiz       = EKGMenu->addAction("Add Disease");
-    A_setDiz       = EKGMenu->addAction("Set Disease");
-    A_setAge       = EKGMenu->addAction("Set EKG Age");
+    QMenu *EKGMenu  = menu->addMenu("EKG");
+    A_addDiz        = EKGMenu->addAction("Add Disease");
+    A_setDiz        = EKGMenu->addAction("Set Disease");
+    A_setAge        = EKGMenu->addAction("Set EKG Age");
     //Neural Network Menu
-    NNMenu   = NNWidget->getMenu();
+    NNMenu          = NNWidget->getMenu();
     menu->addMenu(NNMenu);
     NNMenu->setEnabled(false);
     //Help Menu
@@ -1053,3 +960,94 @@ QStringList EKGWindow::AddRecordFile(QString patch)
     }
     return files;
 }
+/*--------------------------------------------------------------------------------------------
+|                                     Mode And GUI                                           |
+---------------------------------------------------------------------------------------------*/
+void EKGWindow::A_TrainMode_change()
+{
+    NNMenu->setEnabled(true);
+    setCentralWidget(NNWidget);
+    A_TrainMode->setEnabled(false);
+    ///
+    mode = 4;
+    if (A_TrainMode->isChecked())
+    {
+        resize(WIDTH,HEIGHT);
+        A_DiseaseMode->setChecked(false);
+        A_WekaMode->setChecked   (false);
+        A_InterMode->setChecked  (false);
+    }
+    else
+    {
+        A_InterMode->setChecked(true);
+    }
+}
+void EKGWindow::A_InterMode_change()
+{
+    mode = 1;
+    if (A_InterMode->isChecked())
+    {
+        //Change Size
+        resize(WIDTH,HEIGHT);
+        NNMenu->setEnabled(false);
+        A_DiseaseMode->setChecked(false);
+        A_WekaMode->setChecked   (false);
+        A_TrainMode->setChecked  (false);
+    }
+    else
+    {
+        A_WekaMode->setChecked(true);
+    }
+    CreateLayout(true);
+    //resize(WIDTH,HEIGHT);
+}
+void EKGWindow::A_DiseaseMode_change()
+{
+    mode = 2;
+    resize(600,400);
+    CreateLayout(true);
+    if (A_DiseaseMode->isChecked())
+    {
+        //Change Size
+        resize(600,400);
+        NNMenu->setEnabled(false);
+        A_InterMode->setChecked(false);
+        A_WekaMode->setChecked(false);
+        A_TrainMode->setChecked  (false);
+    }
+    else
+    {
+        A_InterMode->setChecked(true);
+    }
+}
+void EKGWindow::A_WekaMode_change()
+{
+    mode = 3;
+    resize(600,450);
+    CreateLayout(true);
+    if (A_WekaMode->isChecked())
+    {
+        //Change Size
+        resize(600,450);
+        NNMenu->setEnabled(false);
+        A_InterMode->setChecked(false);
+        A_DiseaseMode->setChecked(false);
+        A_TrainMode->setChecked  (false);
+    }
+    else
+    {
+        A_InterMode->setChecked(true);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+

@@ -23,7 +23,8 @@ SOURCES += \
     qscan.cpp \
     ekgnn.cpp \
     nnframwork.cpp \
-    infowidget.cpp
+    infowidget.cpp \
+    ekgsplash.cpp
 
 DEPENDPATH  += /usr/include/qwt-qt4
 INCLUDEPATH += /usr/include/qwt-qt4
@@ -55,7 +56,8 @@ HEADERS += \
     qscan.h \
     ekgnn.h \
     nnframwork.h \
-    infowidget.h
+    infowidget.h \
+    ekgsplash.h
 
 RESOURCES += \
     EKG.qrc

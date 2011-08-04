@@ -70,7 +70,7 @@ void NNframwork::createConnection()
     connect(A_learningMomentum,SIGNAL(triggered()),this,SLOT(asklearningMomentum()));
     connect(A_inputNNum,       SIGNAL(triggered()),this,SLOT(askinputNNum()));
     connect(A_outputNNum,      SIGNAL(triggered()),this,SLOT(askoutputNNum()));
-    connect(A_hiddentNN,       SIGNAL(triggered()),this,SLOT(askhiddentNN()));
+    connect(A_hiddentNN,       SIGNAL(triggered()),this,SLOT(askhiddenNN()));
     connect(A_HiddenAF,        SIGNAL(triggered()),this,SLOT(askHiddenAF()));
     connect(A_OutputAF,        SIGNAL(triggered()),this,SLOT(askOutputAF()));
 }
