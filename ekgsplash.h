@@ -2,7 +2,7 @@
 #define EKGSPLASH_H
 
 #include "ekgwindow.h"
-#define SHOW_TIME 5
+#define SHOW_TIME 4
 
 class EKGsplash : public QMainWindow
 {
@@ -14,10 +14,13 @@ signals:
     void       splashShowed();
 private slots:
     void       timer_Stop();
+    void       nextFade();
 private:
     void       showEvent ( QShowEvent  * event );
     void       initialize (int second);
+    double     fadeOpacity;
     QTimer    *ShowTimer;
+    QTimer    *fadeTimer;
     QLabel    *mainwidget;
 };
 

@@ -108,7 +108,7 @@ void GButton::setColor(GColor color)
         break;
     }
     setStatus(normal);
-    timer->start(10);
+    repaint();
 }
 
 void GButton::setStatus(Status status)
