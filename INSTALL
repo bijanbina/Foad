@@ -1,0 +1,36 @@
+---------------------------------------------Besme allah Rahman Rahim--------------------------------------------------
+Automatic Installation
+======================
+simply run install.sh
+*note: this script only work with debian base distribution for other use "Manual Installation"
+
+
+Manual Installation
+===================
+The installation have 4 step to do
+1. get the depndency
+2. create compatible make file for your system
+3. compile the file
+4. install the compilled file on your system
+
+STEP 1:get the depndency
+------------------------
+Here is the list of packages you need to build foad:
+libqwt5-qt4-dev libfann-dev libfftw3-dev libksane-dev
+**you can pass this list to your package manager or install them manually
+also you need to extract and compile wfdb from source the package is avalible on etc/wfdb.tar.gz
+for more information read the wfdb INSTALL file
+
+STEP 2:create compatible make file for your system
+--------------------------------------------------
+run simply ./configure , if you got error install the desired package
+
+STEP 3:compile the file
+-----------------------
+run make
+
+STEP 4:install the compilled file on your system
+------------------------------------------------
+run : sudo make install
+
+Regards Bijan Binaee

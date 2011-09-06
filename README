@@ -1,0 +1,13 @@
+---------------------------------------------Besme allah Rahman Rahim--------------------------------------------------
+
+Foad
+===================================================================
+
+Foad is a gesture software to find out feature from EKG paper and 
+say disease!
+
+It reads EKG from scanner, image file, or from wfdb standard database
+then recreate the EKG signal next start to extract feuture from it.
+final the feuture dispatch to a trained neural network and get disease
+
+*:To install and use this software read INSTALL
