@@ -690,7 +690,6 @@ bool SigDetect::findP()
         int sum = 0;
         for(int start = PStart ; start < PStart + Pwidth ; start++ )
             sum += buffer[start];
-        cout << sum<<endl;
         sigInfo.p_area=sum;
         return true;
     }
@@ -858,35 +857,35 @@ void SigDetect::qCurve()
     {
         M = sigInfo.qs.detect;
     }
-   q_curves = new QwtPlotCurve;
-   //Calculate Q place
-   double x[1];
-   x[0] = M / 200.0;
-   //x[0] = M;
-   double y[1];
-   y[0] = MainSig[M];
-   //-------------- Add Symbol -------------------
-   QwtSymbol sym;
-   sym.setStyle(QwtSymbol::Ellipse);
-   sym.setPen(QColor(Qt::red));
-   sym.setBrush(QColor(Qt::yellow));
-   sym.setSize(8);
-   q_curves->setSymbol(sym);
-   q_curves->setStyle(QwtPlotCurve::NoCurve);
-   // ------copy the data into the curves-----------
-   q_curves->setData(x,y,1);
-   //--------------- Attach Curves ----------------
-   q_curves->attach(myPlot);
+    q_curves = new QwtPlotCurve(trUtf8("Q"));
+    //Calculate Q place
+    double x[1];
+    x[0] = M / SAMPLE_RATE;
+    //x[0] = M;
+    double y[1];
+    y[0] = MainSig[M];
+    //-------------- Add Symbol -------------------
+    QwtSymbol sym;
+    sym.setStyle(QwtSymbol::Ellipse);
+    sym.setPen(QColor(Qt::red));
+    sym.setBrush(QColor(Qt::yellow));
+    sym.setSize(8);
+    q_curves->setSymbol(sym);
+    q_curves->setStyle(QwtPlotCurve::NoCurve);
+    // ------copy the data into the curves-----------
+    q_curves->setData(x,y,1);
+    //--------------- Attach Curves ----------------
+    q_curves->attach(myPlot);
 }
 void SigDetect::rCurve()
 {
     if(sigInfo.r.detect!=-1)
     {
-        r_curves = new QwtPlotCurve;
+        r_curves = new QwtPlotCurve(trUtf8("R"));
         int M = sigInfo.r.detect;
         //Calculate R place
         double x[1];
-        x[0] = M / 200.0;
+        x[0] = M / SAMPLE_RATE;
         //!x[0] = M;
         double y[1];
         y[0] = MainSig[sigInfo.r.detect];
@@ -906,7 +905,7 @@ void SigDetect::rCurve()
 }
 void SigDetect::sCurve()
 {
-    s_curves = new QwtPlotCurve;
+    s_curves = new QwtPlotCurve(trUtf8("S"));
     //Calculate S place
     int M = sigInfo.s.detect;
     if (M == -1)
@@ -914,7 +913,7 @@ void SigDetect::sCurve()
         M = sigInfo.qs.detect;
     }
     double x[1];
-    x[0] = M / 200.0;
+    x[0] = M / SAMPLE_RATE;
     //x[0] = M;
     double y[1];
     y[0] = MainSig[M];
@@ -933,17 +932,17 @@ void SigDetect::sCurve()
 }
 void SigDetect::pCurve()
 {
-    pBold_curves = new QwtPlotCurve;
-    p_curves = new QwtPlotCurve;
+    pBold_curves = new QwtPlotCurve(trUtf8("P Duration"));
+    p_curves = new QwtPlotCurve(trUtf8("P"));
     //Calculate S place
     if (sigInfo.Pcount > 0)
     {
         double x[sigInfo.Pcount];
         double y[sigInfo.Pcount];
-        //!x[0] = M / 200.0;
+        //!x[0] = M / SAMPLE_RATE;
         for (int k = 0 ; k < sigInfo.Pcount ; k++)
         {
-            x[k] = sigInfo.p[k].detect / 200.0;
+            x[k] = sigInfo.p[k].detect / SAMPLE_RATE;
             y[k] = MainSig[sigInfo.p[k].detect];
         }
 
@@ -961,7 +960,7 @@ void SigDetect::pCurve()
         double Ybold[size];
         for (int i = sigInfo.p[0].start; i <= sigInfo.p[0].end;i++)
         {
-            Xbold[i - sigInfo.p[0].start] = i / 200.0;
+            Xbold[i - sigInfo.p[0].start] = i / SAMPLE_RATE;
             Ybold[i - sigInfo.p[0].start] = MainSig[i];
         }
         //-----------------Set pen-----------------------
@@ -982,14 +981,14 @@ void SigDetect::pCurve()
 }
 void SigDetect::tCurve()
 {
-    t_curves = new QwtPlotCurve;
-    tBold_curves = new QwtPlotCurve;
+    t_curves = new QwtPlotCurve(trUtf8("T"));
+    tBold_curves = new QwtPlotCurve(trUtf8("T Duration"));
     //Calculate T place
     int M = sigInfo.t.detect;
     if (M != -1)
     {
         double x[1];
-        x[0] = M / 200.0;
+        x[0] = M / SAMPLE_RATE;
         //x[0] = M;
         double y[1];
         y[0] = MainSig[M];
@@ -1007,7 +1006,7 @@ void SigDetect::tCurve()
         double Ybold[size];
         for (int i = sigInfo.t.start; i <= sigInfo.t.end;i++)
         {
-            Xbold[i - sigInfo.t.start] = i / 200.0;
+            Xbold[i - sigInfo.t.start] = i / SAMPLE_RATE;
             Ybold[i - sigInfo.t.start] = MainSig[i];
         }
         //-----------------Set pen-----------------------

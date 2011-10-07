@@ -5,7 +5,6 @@ void GButton::initialize(const GColor color)
     //create timer for fading effect. go to changeAlpha function for more information
     timer = new QTimer(this);
     connect (timer,SIGNAL(timeout()),this,SLOT(changeAlpha()));
-
     setColor(color);
     nImage = bImage[0];
     setStatus(normal);

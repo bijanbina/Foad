@@ -35,6 +35,7 @@ For updates to this software, please visit our website
 #ifndef SIGDEMO_H
 #define SIGDEMO_H
 
+
 #include "sigdetect.h"
 
 class SigDemo : public QObject
@@ -42,13 +43,16 @@ class SigDemo : public QObject
     Q_OBJECT
 public:
     SigDemo(QObject *parent = 0);
-    SigDemo(vector<double> signal , bool getPlot , QwtPlot *plotwidget ,  int id , int EKG_Age , int start , QObject *parent = 0);
+    SigDemo(vector<double> signal , QwtPlot *plotwidget ,  int id , int EKG_Age , int start , QObject *parent = 0);
     Ekg_Data getInfo();
 private:
     void plot(vector<double> Signal);
     void plot(double *Signal ,int size);
-    void ZeroLine();
-    void ZeroShib();
+    void mark(int index);
+    void updatePlot(vector<double> Signal);
+    void updatePlot(double *Signal ,int size);
+    void ZeroLine(bool animate);
+    void ZeroShib(bool animate);
     bool AllDetected();
     double Miangin(vector<double>);
     double getLine(vector<double>);
@@ -75,6 +79,7 @@ private:
     //Signal Data
     vector <double> MainSig;
     vector <double> buffer;
+    double         *XSignal;//X axis of signal
     vector <int> sigBeat;
     Ekg_Data sigInfo;
 
@@ -82,6 +87,7 @@ private:
     QwtPlot *myPlot;
     QwtPlotZoomer *zoomer;
     QwtPlotCurve *Signal_curves;
+    QwtPlotCurve *mark_curves;
     QwtPlotCurve *q_curves;
     QwtPlotCurve *r_curves;
     QwtPlotCurve *s_curves;
@@ -99,11 +105,15 @@ private:
     int MAX();
     double getShib(double point1,double point2);
     //
-    void NODetect(double replace);
+    void Warning  (QString text);
+    void NODetect (double replace);
     void setDetect(vector<double> input);
+    void gussian  (int reduce);
     vector<double> getDetect();
-    void gussian(int reduce);
     vector<double> fastSmooth(vector<double> input , int width);
+    //Mark Variable:
+    vector<double> mark_temp_x;
+    vector<double> mark_temp_y;
 };
 
 #endif // SIGDEMO_H

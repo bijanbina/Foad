@@ -36,15 +36,12 @@ For updates to this software, please visit our website
 #define INTERCEPTW_H
 
 #include "nnframwork.h"
-#define TIMEREPEAT 60
-#define TRAiNTIME 8 * SAMPLE_RATE
-#define ASKCOMPLEX false
 
 class InterceptW : public QWidget
 {
     Q_OBJECT
 public:
-    explicit InterceptW(QWidget *parent = 0);
+    explicit  InterceptW(QWidget *parent = 0);
     weka_data Intercept(vector<double> sig , bool getPlot = false, bool getIntercept = false);
 signals:
 
@@ -61,6 +58,7 @@ public slots:
     void openImage();
     void openRecord();
     void scanFinished();
+    void Demo_click();
     //menu slots
     void A_Sig_change(bool val);
     void A_Det_change(bool val);
@@ -92,15 +90,10 @@ private:
     QwtPlotCurve  *q_curves;
     QwtPlotCurve  *r_curves;
     QwtPlotCurve  *s_curves;
-    QwtPlotCurve  *p_curves;
-    QwtPlotCurve  *t_curves;
-    QwtPlotCurve  *u_curves;
     //Functions for Plot
     void qCurve();
     void rCurve();
     void sCurve();
-    void pCurve();
-    void tCurve();
     //EKG
     EKG_atr          localFeature;
     ListRW           disList;                //Disease List
@@ -109,6 +102,7 @@ private:
     EKGSignal        sigReader;
     int              ventricularrate();
     SigDetect       *InterCeptWindow;
+    SigDemo         *DemoWidget;
     vector<Ekg_Data> localInfo;
     int              InputFileSampleFrequency;
     int              EKG_age ,ADCZero ,ADCUnit;

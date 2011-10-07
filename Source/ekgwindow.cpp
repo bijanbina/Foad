@@ -105,6 +105,7 @@ void EKGWindow::createSandS()
     connect(A_setDiz,     SIGNAL(triggered(bool)),i_panel,SLOT(setDisease()));
     connect(A_Scan,       SIGNAL(triggered(bool)),i_panel,SLOT(scan()));
     connect(A_LoadImage,  SIGNAL(triggered(bool)),i_panel,SLOT(openImage()));
+    connect(A_Demo,       SIGNAL(triggered(bool)),i_panel,SLOT(Demo_click()));
     connect(B_AskComplex, SIGNAL(triggered(bool)),i_panel,SLOT(B_AskComplex_change(bool)));
 }
 void EKGWindow::createMenu()
@@ -115,7 +116,8 @@ void EKGWindow::createMenu()
     //File Menu
     QMenu *FileMenu = menu->addMenu(trUtf8("File"));
     A_Start = FileMenu->addAction(trUtf8("Start"));
-    A_Scan = FileMenu->addAction(trUtf8("Scan"));
+    A_Demo  = FileMenu->addAction(trUtf8("Start Demo"));
+    A_Scan  = FileMenu->addAction(trUtf8("Scan"));
     A_LoadImage = FileMenu->addAction(trUtf8("Open Image"));
     A_Save = FileMenu->addAction(trUtf8("Save Weka"));
     A_Save->setEnabled(false);

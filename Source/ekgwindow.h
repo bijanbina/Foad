@@ -54,6 +54,7 @@ private:
     QAction  *A_Plot_show;
     QAction  *A_Quit;
     QAction  *A_Start;
+    QAction  *A_Demo;
     QAction  *A_DiseaseMode;
     QAction  *A_InterMode;
     QAction  *A_WekaMode;

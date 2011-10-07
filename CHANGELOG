@@ -1,5 +1,15 @@
 =============================================Besme allah Rahman Rahim==================================================
 ----------------------------------------------------
+revision: 48
+Type    : Add feuture, cleaning code
+author  : Bijan Binaee
+E-mail  : bijanbina@gmail.com
+Date    : Friday, October 07, 2011 11:23:51 AM
+Comment : Move all define to the header.h
+	  Create legend
+	  start working on create demo of our
+	  signal processing!
+----------------------------------------------------
 revision: 47
 Type    : review
 author  : Bijan Binaee

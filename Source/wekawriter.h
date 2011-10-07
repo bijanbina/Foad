@@ -1,6 +1,6 @@
 #ifndef WEKAWRITER_H
 #define WEKAWRITER_H
-#include "sigdetect.h"
+#include "sigdemo.h"
 #define INPUT_NUMBER 5
 #define OUTPUT_NUMBER 1
 struct weka_data

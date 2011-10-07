@@ -39,7 +39,8 @@ LIBS        += -lqwt-qt4 \
                -lksane
 
 #QMAKE_CXXFLAGS += -S -E
-QMAKE_CXXFLAGS += -mtune=core2
+QMAKE_CXXFLAGS += -mtune=core2 \
+                  -gdwarf-2
 
 HEADERS += \
     ekgwindow.h \

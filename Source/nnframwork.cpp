@@ -9,7 +9,7 @@ NNframwork::NNframwork(QWidget *parent) :
     LocalNN     = new EKGNN;
     NNMenu      = new QMenu(trUtf8("Neural Network"));
     //Set Default Value
-    EpochCount = 2000;
+    EpochCount = DEFAULT_EPOCH_COUNT;
     EpochNum   = 0;
     //Plot
     PlotConfig(trUtf8("Neural Network Train Plot"),EpochCount);

@@ -31,7 +31,11 @@ You may contact the author by e-mail (bijan@binaee.ir) or postal mail
 *****************************************************************************/
 
 
-#define SAMPLE_RATE	200	/* Sample rate in Hz. */
+#define SAMPLE_RATE	            200.0	/* Sample rate in Hz. */
+#define DEFAULT_EPOCH_COUNT         2000
+#define TIMEREPEAT 60
+#define TRAiNTIME 8 * SAMPLE_RATE
+#define ASKCOMPLEX false
 
 #ifndef QrSDET_INCLUDED
 #define QrSDET_INCLUDED
@@ -54,6 +58,7 @@ You may contact the author by e-mail (bijan@binaee.ir) or postal mail
 #include <string>
 #include <vector>
 #include <cmath>
+#include <ctime>
 //QT Header
 #include <QtGui>
 #include <QFile>
@@ -90,18 +95,19 @@ You may contact the author by e-mail (bijan@binaee.ir) or postal mail
 #include <wfdb/ecgmap.h>
 //QWT Plot Header
 #include <qwt_plot.h>
+#include <qwt_legend.h>
+#include <qwt_symbol.h>
+#include <qwt_color_map.h>
+#include <qwt_scale_map.h>
+#include <qwt_plot_grid.h>
 #include <qwt_plot_curve.h>
+#include <qwt_scale_draw.h>
+#include <qwt_double_rect.h>
 #include <qwt_plot_zoomer.h>
 #include <qwt_plot_panner.h>
 #include <qwt_plot_layout.h>
-#include <qwt_plot_grid.h>
-#include <qwt_plot_spectrogram.h>
 #include <qwt_scale_widget.h>
-#include <qwt_scale_map.h>
-#include <qwt_scale_draw.h>
-#include <qwt_double_rect.h>
-#include <qwt_symbol.h>
-#include <qwt_color_map.h>
+#include <qwt_plot_spectrogram.h>
 //Pthread
 #include <pthread.h>
 //Intel Multithread

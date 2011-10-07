@@ -1,6 +1,6 @@
 #include "sigdemo.h"
 
-SigDemo::SigDemo(vector<double> signal , bool getPlot , QwtPlot *plotwidget ,  int id , int EKG_Age, int start , QObject *parent ) : QObject(parent)
+SigDemo::SigDemo(vector<double> signal , QwtPlot *plotwidget ,  int id , int EKG_Age, int start_sig , QObject *parent ) : QObject(parent)
 {
 //Define variable
     MainSig = signal;
@@ -25,13 +25,34 @@ SigDemo::SigDemo(vector<double> signal , bool getPlot , QwtPlot *plotwidget ,  i
     sigInfo.age   = EKG_Age;
     sigInfo.Pcount = 0;
     sigInfo.RR     = MainSig.size();
-    sigInfo.start  = start;
+    sigInfo.start  = start_sig;
+    //Set plot attributes
+    myPlot = plotwidget;
+    QString strID ;
+    strID.setNum(id);
+    myPlot->setTitle(strID);
+    EKG_Grid    = new QwtPlotGrid();
+    mark_curves = new QwtPlotCurve();
+    mark_temp_x.push_back(11);
+    cout << mark_temp_x[0] << endl;
+    myPlot->canvas()->setFrameStyle(0);
+    myPlot->setWindowIcon(QIcon(":/icon"));
+    zoomer = new QwtPlotZoomer(myPlot->canvas());
+    zoomer->setMousePattern(QwtEventPattern::MouseSelect3,Qt::RightButton);
+
+
+    //
+    plot(MainSig);
+    Signal_curves->setBrush(QBrush(QColor(30,80,0,150)));
 
     if(buffer.size() < 60)
         return ;
 //Make On base
-    ZeroLine();
-    ZeroShib();
+    ZeroLine(true);
+
+    Warning("find base line finished!\nstart find base shib");
+
+    ZeroShib(true);
     MainSig = buffer;
 //Find R;
     bool HaveR = findR(),HaveP=true;
@@ -47,14 +68,14 @@ SigDemo::SigDemo(vector<double> signal , bool getPlot , QwtPlot *plotwidget ,  i
     }
 
     MK_QRS_Zero(DETECTED);
-    ZeroLine();
+    ZeroLine(false);
     //MK_First_Zero();
     double PT = 3.0 / 8.0;
     //Smooth Filter
     vector<double> BDetected = getDetect();
     NODetect(0);
     gussian(5);
-    ZeroLine();
+    ZeroLine(false);
     setDetect(BDetected);
 
     if (MAX() > PT * buffer.size())
@@ -62,7 +83,7 @@ SigDemo::SigDemo(vector<double> signal , bool getPlot , QwtPlot *plotwidget ,  i
         //while(HaveP)
         //{
             HaveP = findP();
-            ZeroLine();
+            ZeroLine(false);
         //}
         if (MAX() < PT * buffer.size() && buffer[MAX()]> 5)
         {
@@ -72,7 +93,7 @@ SigDemo::SigDemo(vector<double> signal , bool getPlot , QwtPlot *plotwidget ,  i
     else
     {
         findT();
-        ZeroLine();
+        ZeroLine(false);
         if (MAX() > PT * buffer.size())
         {
             int Pcount = 0;
@@ -96,19 +117,8 @@ SigDemo::SigDemo(vector<double> signal , bool getPlot , QwtPlot *plotwidget ,  i
         sigInfo.NSR = false;
 
 //Copy to double array
-    if(getPlot)
-    {
-        myPlot = plotwidget;
-        EKG_Grid = new QwtPlotGrid();
-        QString strID ;
-        strID.setNum(id);
-        myPlot->setTitle(strID);
-        myPlot->canvas()->setFrameStyle(0);
-        myPlot->setWindowIcon(QIcon(":/icon"));
-        zoomer = new QwtPlotZoomer(myPlot->canvas());
-        zoomer->setMousePattern(QwtEventPattern::MouseSelect3,Qt::RightButton);
-        plot(MainSig);
-    }
+
+    //plot(MainSig);
 }
 //! Create plot for signal first convert it to double array
 void SigDemo::plot(vector<double> Signal)
@@ -120,16 +130,47 @@ void SigDemo::plot(vector<double> Signal)
     }
     plot(PSignal,Signal.size());
 }
+//! update plot for signal first convert it to double array
+void SigDemo::updatePlot(vector<double> Signal)
+{
+    double PSignal[Signal.size()];//Private Signal
+    for (int i = 0 ; i < Signal.size(); i++)
+    {
+        PSignal[i] = Signal[i];
+    }
+    updatePlot(PSignal,Signal.size());
+}
+
+void SigDemo::updatePlot(double *Signal ,int size)
+{
+    double x[size];
+    double s = 0;
+    for(int i = 0 ; i < size ; i++)
+    {
+        x[i] = s;
+        s +=0.005;
+    }
+    // ------copy the data into the curves-----------
+    Signal_curves->setData(x,Signal,size);
+    //-----------------Set pen-----------------------
+    QPen *ekgPen = new QPen(Qt::blue);
+    ekgPen->setWidthF(0.5);
+    ekgPen->setJoinStyle(Qt::RoundJoin);
+    ekgPen->setCapStyle(Qt::RoundCap);
+    Signal_curves->setPen(*ekgPen);
+
+    myPlot->replot();
+}
 
 void SigDemo::plot(double *Signal ,int size)
 {
     myPlot->clear();
     myPlot->plotLayout()->setAlignCanvasToScales(true);
-    double x[size];
+    XSignal = new double[size];
     double s = 0,MaxVal = -999999, MinVal = 999999;
     for(int i = 0 ; i < size ; i++)
     {
-        x[i] = s;
+        XSignal[i] = s;
         s +=0.005;
         if (MaxVal < Signal[i])
             MaxVal = Signal[i];
@@ -151,21 +192,19 @@ void SigDemo::plot(double *Signal ,int size)
     Signal_curves = new QwtPlotCurve(trUtf8("Signal"));
 
     //--------------- Preparing -----------------
-    zoomer->zoom(0);
     myPlot->setAxisTitle(myPlot->xBottom, trUtf8("Time (s)"));
     myPlot->setAxisTitle(myPlot->yLeft, trUtf8("Voltage (mV)"));
     Signal_curves->setRenderHint(QwtPlotItem::RenderAntialiased);
-
     // ------copy the data into the curves-----------
-    Signal_curves->setData(x,Signal,size);
+    Signal_curves->setData(XSignal,Signal,size);
     //--------------- Attach Curves ----------------
     Signal_curves->attach(myPlot);
     // ADD Finded Feutures
-    qCurve();
-    rCurve();
-    sCurve();
-    pCurve();
-    tCurve();
+    //qCurve();
+    //rCurve();
+    //sCurve();
+    //pCurve();
+    //tCurve();
     //-----------------Set pen-----------------------
     QPen *ekgPen = new QPen(Qt::blue);
     ekgPen->setWidthF(0.5);
@@ -189,7 +228,323 @@ void SigDemo::plot(double *Signal ,int size)
     myPlot->replot();
 
 }
-void SigDemo::ZeroShib()
+SigDemo::SigDemo(QObject *parent) : QObject(parent)
+{
+    ;
+}
+bool SigDemo::AllDetected()
+{
+    for(int i = 0 ; i < buffer.size() ; i++)
+        if(buffer[i] != DETECTED)
+            return false;
+    return true;
+}
+double SigDemo::getLine(vector<double> fbuffer)
+{
+    double sMin = 0;
+    double s = 0;
+    for ( int i = 0 ; i < fbuffer.size();i++)
+    {
+        s += fbuffer[i];
+    }
+    s /= fbuffer.size();
+    for (int j = 0 ; j < fbuffer.size(); j++)
+    {
+        if (fbuffer[j] != DETECTED)
+            sMin += abs(fbuffer[j] - s);
+    }
+    return sMin;
+}
+double SigDemo::getVariance(vector<double> fbuffer)
+{
+    double s = 0;
+    double variance = 0;
+    for (int i = 0 ; i < fbuffer.size() ; i++)
+    {
+        s += fbuffer[i];
+    }
+    s /= fbuffer.size();
+    for (int i = 0 ; i < fbuffer.size() ; i++)
+    {
+        variance += pow(fbuffer[i] - s,2);
+    }
+    return variance;
+}
+//---------------------------------------PLOT--------------------------------------------
+//!  use to mark a point in plot this point have x index y of MainSig[index]
+void SigDemo::mark(int index)
+{
+    //Calculate time of index and add it to mark list;
+    mark_temp_x.push_back( index / SAMPLE_RATE );
+    mark_temp_y.push_back( MainSig[index] );
+    //Create an array from vector
+    double mark_x[mark_temp_x.size()];
+    double mark_y[mark_temp_x.size()];
+    for (int i = 0;i<mark_temp_x.size();i++)
+    {
+        mark_x[i] = mark_temp_x[i];
+        mark_y[i] = mark_temp_y[i];
+    }
+    //--------------- Add Symbol -------------------
+    QwtSymbol sym;
+    sym.setStyle(QwtSymbol::Ellipse);
+    sym.setPen(QColor(rand() % 255,rand() % 255,rand() % 255));
+    sym.setBrush(QColor(255,100,20));
+    sym.setSize(8);
+    r_curves->setSymbol(sym);
+    // -----------update curves data----------------
+    r_curves->setData(mark_x,mark_y,mark_temp_x.size());
+    //--------------- Attach Curves ----------------
+    mark_curves->attach(myPlot);
+}
+
+void SigDemo::qCurve()
+{
+    int M = sigInfo.q.detect;
+    if (M == -1)
+    {
+        M = sigInfo.qs.detect;
+    }
+   q_curves = new QwtPlotCurve;
+   //Calculate Q place
+   double x[1];
+   x[0] = M / SAMPLE_RATE;
+   //x[0] = M;
+   double y[1];
+   y[0] = MainSig[M];
+   //-------------- Add Symbol -------------------
+   QwtSymbol sym;
+   sym.setStyle(QwtSymbol::Ellipse);
+   sym.setPen(QColor(Qt::red));
+   sym.setBrush(QColor(Qt::yellow));
+   sym.setSize(8);
+   q_curves->setSymbol(sym);
+   q_curves->setStyle(QwtPlotCurve::NoCurve);
+   // ------copy the data into the curves-----------
+   q_curves->setData(x,y,1);
+   //--------------- Attach Curves ----------------
+   q_curves->attach(myPlot);
+}
+void SigDemo::rCurve()
+{
+    if(sigInfo.r.detect!=-1)
+    {
+        r_curves = new QwtPlotCurve;
+        int M = sigInfo.r.detect;
+        //Calculate R place
+        double x[1];
+        x[0] = M / SAMPLE_RATE;
+        //!x[0] = M;
+        double y[1];
+        y[0] = MainSig[sigInfo.r.detect];
+        //-------------- Add Symbol -------------------
+        QwtSymbol sym;
+        sym.setStyle(QwtSymbol::Ellipse);
+        sym.setPen(QColor(Qt::red));
+        sym.setBrush(QColor(255,100,20));
+        sym.setSize(8);
+        r_curves->setSymbol(sym);
+        r_curves->setStyle(QwtPlotCurve::NoCurve);
+        // ------copy the data into the curves-----------
+        r_curves->setData(x,y,1);
+        //--------------- Attach Curves ----------------
+        r_curves->attach(myPlot);
+    }
+}
+void SigDemo::sCurve()
+{
+    s_curves = new QwtPlotCurve;
+    //Calculate S place
+    int M = sigInfo.s.detect;
+    if (M == -1)
+    {
+        M = sigInfo.qs.detect;
+    }
+    double x[1];
+    x[0] = M / SAMPLE_RATE;
+    //x[0] = M;
+    double y[1];
+    y[0] = MainSig[M];
+    //-------------- Add Symbol -------------------
+    QwtSymbol sym;
+    sym.setStyle(QwtSymbol::Ellipse);
+    sym.setPen(QColor(Qt::red));
+    sym.setBrush(QColor(Qt::green));
+    sym.setSize(8);
+    s_curves->setSymbol(sym);
+    s_curves->setStyle(QwtPlotCurve::NoCurve);
+    // ------copy the data into the curves-----------
+    s_curves->setData(x,y,1);
+    //--------------- Attach Curves ----------------
+    s_curves->attach(myPlot);
+}
+void SigDemo::pCurve()
+{
+    pBold_curves = new QwtPlotCurve;
+    p_curves = new QwtPlotCurve;
+    //Calculate S place
+    if (sigInfo.Pcount > 0)
+    {
+        double x[sigInfo.Pcount];
+        double y[sigInfo.Pcount];
+        //!x[0] = M / SAMPLE_RATE;
+        for (int k = 0 ; k < sigInfo.Pcount ; k++)
+        {
+            x[k] = sigInfo.p[k].detect / SAMPLE_RATE;
+            y[k] = MainSig[sigInfo.p[k].detect];
+        }
+
+        //-------------- Add Symbol -------------------
+        QwtSymbol sym;
+        sym.setStyle(QwtSymbol::Ellipse);
+        sym.setPen(QColor(Qt::red));
+        sym.setBrush(QColor(Qt::magenta));
+        sym.setSize(8);
+        p_curves->setSymbol(sym);
+        p_curves->setStyle(QwtPlotCurve::NoCurve);
+        //------------ Bold P Duration ----------------
+        int size = sigInfo.p[0].end - sigInfo.p[0].start + 1;
+        double Xbold[size];
+        double Ybold[size];
+        for (int i = sigInfo.p[0].start; i <= sigInfo.p[0].end;i++)
+        {
+            Xbold[i - sigInfo.p[0].start] = i / SAMPLE_RATE;
+            Ybold[i - sigInfo.p[0].start] = MainSig[i];
+        }
+        //-----------------Set pen-----------------------
+        pBold_curves->setRenderHint(QwtPlotItem::RenderAntialiased);
+        QPen ekgPen = QPen(Qt::red);
+        ekgPen.setWidthF(2);
+        ekgPen.setJoinStyle(Qt::RoundJoin);
+        ekgPen.setCapStyle(Qt::RoundCap);
+        pBold_curves->setPen(ekgPen);
+        // ------copy the data into the curves-----------
+        p_curves->setData(x,y,1);
+        pBold_curves->setData(Xbold,Ybold,size);
+        //--------------- Attach Curves ----------------
+        p_curves->attach(myPlot);
+        pBold_curves->attach(myPlot);
+    }
+
+}
+void SigDemo::tCurve()
+{
+    t_curves = new QwtPlotCurve;
+    tBold_curves = new QwtPlotCurve;
+    //Calculate T place
+    int M = sigInfo.t.detect;
+    if (M != -1)
+    {
+        double x[1];
+        x[0] = M / SAMPLE_RATE;
+        //x[0] = M;
+        double y[1];
+        y[0] = MainSig[M];
+        //-------------- Add Symbol -------------------
+        QwtSymbol sym;
+        sym.setStyle(QwtSymbol::Ellipse);
+        sym.setPen(QColor(Qt::red));
+        sym.setBrush(QColor(Qt::gray));
+        sym.setSize(8);
+        t_curves->setSymbol(sym);
+        t_curves->setStyle(QwtPlotCurve::NoCurve);
+        //------------ Bold T Duration ----------------
+        int size = sigInfo.t.end - sigInfo.t.start + 1;
+        double Xbold[size];
+        double Ybold[size];
+        for (int i = sigInfo.t.start; i <= sigInfo.t.end;i++)
+        {
+            Xbold[i - sigInfo.t.start] = i / SAMPLE_RATE;
+            Ybold[i - sigInfo.t.start] = MainSig[i];
+        }
+        //-----------------Set pen-----------------------
+        tBold_curves->setRenderHint(QwtPlotItem::RenderAntialiased);
+        QPen ekgPen = QPen(Qt::black);
+        ekgPen.setWidthF(2);
+        ekgPen.setJoinStyle(Qt::RoundJoin);
+        ekgPen.setCapStyle(Qt::RoundCap);
+        tBold_curves->setPen(ekgPen);
+        // ------copy the data into the curves-----------
+        t_curves->setData(x,y,1);
+        tBold_curves->setData(Xbold,Ybold,size);
+        //--------------- Attach Curves ----------------
+        t_curves->attach(myPlot);
+        tBold_curves->attach(myPlot);
+    }
+}
+//----------------------------------DETECTED Functions-----------------------------------
+void SigDemo::NODetect(double replace)
+{
+    for (int i = 0 ; i < buffer.size();i++)
+        if (buffer[i] == DETECTED)
+            buffer[i] = replace;
+}
+void SigDemo::setDetect(vector<double> input)
+{
+    if (input.size() > buffer.size())
+        return;
+    for (int i = 0 ; i < input.size();i++)
+        if (input[i] == DETECTED)
+            buffer[i] = DETECTED;
+}
+vector<double> SigDemo::getDetect()
+{
+    vector<double> returnB(buffer.size());
+    for (int i = 0 ; i < buffer.size();i++)
+        if (buffer[i] == DETECTED)
+            returnB[i] = DETECTED;
+    return returnB;
+}
+//------------------------------------------Filter---------------------------------------
+void SigDemo::gussian(int reduce)
+{
+      buffer = fastSmooth(buffer,reduce);
+      buffer = fastSmooth(buffer,reduce);
+      buffer = fastSmooth(buffer,reduce);
+}
+vector<double> SigDemo::fastSmooth(vector<double> input , int width)
+{
+    int SumPoints = width * (width +1);
+    vector<double> s (input.size(),0);
+    int halfw = width/2;
+    int L= input.size();
+    for (int k = 1 ; k <= L- width;k++)
+    {
+        s[k+halfw-1] = SumPoints;
+        SumPoints = SumPoints - input[k];
+        SumPoints = SumPoints + input[k+width];
+    }
+    int sum = 0;
+    for (int i = L - width+1 ;i < L ;i++ )
+    {
+        sum += input[i];
+    }
+    s[L- width + halfw]= sum;
+
+    for (int i = 0 ;i < s.size() ;i++)
+    {
+        s[i] /= width;
+    }
+    return s;
+}
+//---------------------------------Geometry Functions----------------------------------
+double SigDemo::getShib(double point1,double point2)
+{
+    return atan(point2 - point1);
+}
+double SigDemo::getShib(vector<double> fbuffer)
+{
+    double s = 0;
+    for(int i = 1;i<fbuffer.size();i++)
+    {
+        s += getShib(fbuffer[i-1],fbuffer[i]);
+    }
+    s /= fbuffer.size() -1;
+    return s;
+}
+
+//Signal Detecting Function
+void SigDemo::ZeroShib(bool animate)
 {
     int BestShib = -500;
     int sMin = 999999;
@@ -203,8 +558,19 @@ void SigDemo::ZeroShib()
             tedad++;
             s += buffer[j];
         }
+
     }
     s /= tedad;
+
+    if(animate)
+    {
+        QwtPlotCurve *shib_curve = new QwtPlotCurve(trUtf8("Shib"));
+        double Y[buffer.size()];
+        for(int i = 0; i < buffer.size();i++)
+            Y[i] = s;
+
+    }
+
     //Find nazdiktarin noghte be miangin
     for (int j = 10 ; j < buffer.size() - 30; j++)
     {
@@ -248,14 +614,16 @@ void SigDemo::ZeroShib()
     }
 
 }
-void SigDemo::ZeroLine()
+void SigDemo::ZeroLine(bool animate)
 {
     int BestLine = -500;
     int sMin = 999999;
     int s;
-    for (int i = -500 ; i < 500 ; i++)
+
+    for (int i = -600 ; i <= 600 ; i++)
     {
         s = 0;
+
         for (int j = 15 ; j < buffer.size() - 40; j++)
         {
             if (buffer[j] != DETECTED)
@@ -267,10 +635,38 @@ void SigDemo::ZeroLine()
             BestLine = i;
         }
     }
+
     for (int j = 0 ; j < buffer.size(); j++)
     {
         if (buffer[j] != DETECTED)
         buffer[j] = buffer[j] - BestLine;
+    }
+
+    if (animate)
+    {
+        for (int i = -600 ; i <= 600 ; i+= 2)
+        {
+            Signal_curves->setBaseline(i);
+            myPlot->replot();
+        }
+        Signal_curves->setBaseline(BestLine);
+        Signal_curves->setBrush(QBrush(QColor(200,20,0,150)));
+        myPlot->replot();
+        myPlot->replot();
+
+        sleep(1);
+        Signal_curves->setBrush(QBrush(QColor(30,80,0,150)));
+        myPlot->replot();
+        myPlot->replot();
+        sleep(1);
+        Signal_curves->setBaseline(0);
+        updatePlot(buffer);
+        myPlot->replot();
+        sleep(1);
+        Signal_curves->setBrush(QBrush(QColor(30,80,0,0)));
+        myPlot->replot();
+        myPlot->replot();
+
     }
 }
 void SigDemo::findBeat()
@@ -691,7 +1087,6 @@ bool SigDemo::findP()
         int sum = 0;
         for(int start = PStart ; start < PStart + Pwidth ; start++ )
             sum += buffer[start];
-        cout << sum<<endl;
         sigInfo.p_area=sum;
         return true;
     }
@@ -809,293 +1204,23 @@ Ekg_Data SigDemo::getInfo()
 {
     return sigInfo;
 }
-SigDemo::SigDemo(QObject *parent) : QObject(parent)
+//! show message with text content
+void SigDemo::Warning(QString text)
 {
-    ;
+    QString title = "Warning";
+    QMessageBox *warnWindow = new QMessageBox(QMessageBox::Warning,title,text);
+    warnWindow->setIconPixmap(QPixmap(":/warning"));
+    warnWindow->setWindowIcon(QIcon(":/warning"));
+    warnWindow->exec();
 }
-bool SigDemo::AllDetected()
-{
-    for(int i = 0 ; i < buffer.size() ; i++)
-        if(buffer[i] != DETECTED)
-            return false;
-    return true;
-}
-double SigDemo::getLine(vector<double> fbuffer)
-{
-    double sMin = 0;
-    double s = 0;
-    for ( int i = 0 ; i < fbuffer.size();i++)
-    {
-        s += fbuffer[i];
-    }
-    s /= fbuffer.size();
-    for (int j = 0 ; j < fbuffer.size(); j++)
-    {
-        if (fbuffer[j] != DETECTED)
-            sMin += abs(fbuffer[j] - s);
-    }
-    return sMin;
-}
-double SigDemo::getVariance(vector<double> fbuffer)
-{
-    double s = 0;
-    double variance = 0;
-    for (int i = 0 ; i < fbuffer.size() ; i++)
-    {
-        s += fbuffer[i];
-    }
-    s /= fbuffer.size();
-    for (int i = 0 ; i < fbuffer.size() ; i++)
-    {
-        variance += pow(fbuffer[i] - s,2);
-    }
-    return variance;
-}
-//---------------------------------------PLOT--------------------------------------------
-void SigDemo::qCurve()
-{
-    int M = sigInfo.q.detect;
-    if (M == -1)
-    {
-        M = sigInfo.qs.detect;
-    }
-   q_curves = new QwtPlotCurve;
-   //Calculate Q place
-   double x[1];
-   x[0] = M / 200.0;
-   //x[0] = M;
-   double y[1];
-   y[0] = MainSig[M];
-   //-------------- Add Symbol -------------------
-   QwtSymbol sym;
-   sym.setStyle(QwtSymbol::Ellipse);
-   sym.setPen(QColor(Qt::red));
-   sym.setBrush(QColor(Qt::yellow));
-   sym.setSize(8);
-   q_curves->setSymbol(sym);
-   q_curves->setStyle(QwtPlotCurve::NoCurve);
-   // ------copy the data into the curves-----------
-   q_curves->setData(x,y,1);
-   //--------------- Attach Curves ----------------
-   q_curves->attach(myPlot);
-}
-void SigDemo::rCurve()
-{
-    if(sigInfo.r.detect!=-1)
-    {
-        r_curves = new QwtPlotCurve;
-        int M = sigInfo.r.detect;
-        //Calculate R place
-        double x[1];
-        x[0] = M / 200.0;
-        //!x[0] = M;
-        double y[1];
-        y[0] = MainSig[sigInfo.r.detect];
-        //-------------- Add Symbol -------------------
-        QwtSymbol sym;
-        sym.setStyle(QwtSymbol::Ellipse);
-        sym.setPen(QColor(Qt::red));
-        sym.setBrush(QColor(255,100,20));
-        sym.setSize(8);
-        r_curves->setSymbol(sym);
-        r_curves->setStyle(QwtPlotCurve::NoCurve);
-        // ------copy the data into the curves-----------
-        r_curves->setData(x,y,1);
-        //--------------- Attach Curves ----------------
-        r_curves->attach(myPlot);
-    }
-}
-void SigDemo::sCurve()
-{
-    s_curves = new QwtPlotCurve;
-    //Calculate S place
-    int M = sigInfo.s.detect;
-    if (M == -1)
-    {
-        M = sigInfo.qs.detect;
-    }
-    double x[1];
-    x[0] = M / 200.0;
-    //x[0] = M;
-    double y[1];
-    y[0] = MainSig[M];
-    //-------------- Add Symbol -------------------
-    QwtSymbol sym;
-    sym.setStyle(QwtSymbol::Ellipse);
-    sym.setPen(QColor(Qt::red));
-    sym.setBrush(QColor(Qt::green));
-    sym.setSize(8);
-    s_curves->setSymbol(sym);
-    s_curves->setStyle(QwtPlotCurve::NoCurve);
-    // ------copy the data into the curves-----------
-    s_curves->setData(x,y,1);
-    //--------------- Attach Curves ----------------
-    s_curves->attach(myPlot);
-}
-void SigDemo::pCurve()
-{
-    pBold_curves = new QwtPlotCurve;
-    p_curves = new QwtPlotCurve;
-    //Calculate S place
-    if (sigInfo.Pcount > 0)
-    {
-        double x[sigInfo.Pcount];
-        double y[sigInfo.Pcount];
-        //!x[0] = M / 200.0;
-        for (int k = 0 ; k < sigInfo.Pcount ; k++)
-        {
-            x[k] = sigInfo.p[k].detect / 200.0;
-            y[k] = MainSig[sigInfo.p[k].detect];
-        }
 
-        //-------------- Add Symbol -------------------
-        QwtSymbol sym;
-        sym.setStyle(QwtSymbol::Ellipse);
-        sym.setPen(QColor(Qt::red));
-        sym.setBrush(QColor(Qt::magenta));
-        sym.setSize(8);
-        p_curves->setSymbol(sym);
-        p_curves->setStyle(QwtPlotCurve::NoCurve);
-        //------------ Bold P Duration ----------------
-        int size = sigInfo.p[0].end - sigInfo.p[0].start + 1;
-        double Xbold[size];
-        double Ybold[size];
-        for (int i = sigInfo.p[0].start; i <= sigInfo.p[0].end;i++)
-        {
-            Xbold[i - sigInfo.p[0].start] = i / 200.0;
-            Ybold[i - sigInfo.p[0].start] = MainSig[i];
-        }
-        //-----------------Set pen-----------------------
-        pBold_curves->setRenderHint(QwtPlotItem::RenderAntialiased);
-        QPen ekgPen = QPen(Qt::red);
-        ekgPen.setWidthF(2);
-        ekgPen.setJoinStyle(Qt::RoundJoin);
-        ekgPen.setCapStyle(Qt::RoundCap);
-        pBold_curves->setPen(ekgPen);
-        // ------copy the data into the curves-----------
-        p_curves->setData(x,y,1);
-        pBold_curves->setData(Xbold,Ybold,size);
-        //--------------- Attach Curves ----------------
-        p_curves->attach(myPlot);
-        pBold_curves->attach(myPlot);
-    }
 
-}
-void SigDemo::tCurve()
-{
-    t_curves = new QwtPlotCurve;
-    tBold_curves = new QwtPlotCurve;
-    //Calculate T place
-    int M = sigInfo.t.detect;
-    if (M != -1)
-    {
-        double x[1];
-        x[0] = M / 200.0;
-        //x[0] = M;
-        double y[1];
-        y[0] = MainSig[M];
-        //-------------- Add Symbol -------------------
-        QwtSymbol sym;
-        sym.setStyle(QwtSymbol::Ellipse);
-        sym.setPen(QColor(Qt::red));
-        sym.setBrush(QColor(Qt::gray));
-        sym.setSize(8);
-        t_curves->setSymbol(sym);
-        t_curves->setStyle(QwtPlotCurve::NoCurve);
-        //------------ Bold T Duration ----------------
-        int size = sigInfo.t.end - sigInfo.t.start + 1;
-        double Xbold[size];
-        double Ybold[size];
-        for (int i = sigInfo.t.start; i <= sigInfo.t.end;i++)
-        {
-            Xbold[i - sigInfo.t.start] = i / 200.0;
-            Ybold[i - sigInfo.t.start] = MainSig[i];
-        }
-        //-----------------Set pen-----------------------
-        tBold_curves->setRenderHint(QwtPlotItem::RenderAntialiased);
-        QPen ekgPen = QPen(Qt::black);
-        ekgPen.setWidthF(2);
-        ekgPen.setJoinStyle(Qt::RoundJoin);
-        ekgPen.setCapStyle(Qt::RoundCap);
-        tBold_curves->setPen(ekgPen);
-        // ------copy the data into the curves-----------
-        t_curves->setData(x,y,1);
-        tBold_curves->setData(Xbold,Ybold,size);
-        //--------------- Attach Curves ----------------
-        t_curves->attach(myPlot);
-        tBold_curves->attach(myPlot);
-    }
-}
-//----------------------------------DETECTED Functions-----------------------------------
-void SigDemo::NODetect(double replace)
-{
-    for (int i = 0 ; i < buffer.size();i++)
-        if (buffer[i] == DETECTED)
-            buffer[i] = replace;
-}
-void SigDemo::setDetect(vector<double> input)
-{
-    if (input.size() > buffer.size())
-        return;
-    for (int i = 0 ; i < input.size();i++)
-        if (input[i] == DETECTED)
-            buffer[i] = DETECTED;
-}
-vector<double> SigDemo::getDetect()
-{
-    vector<double> returnB(buffer.size());
-    for (int i = 0 ; i < buffer.size();i++)
-        if (buffer[i] == DETECTED)
-            returnB[i] = DETECTED;
-    return returnB;
-}
-//------------------------------------------Filter---------------------------------------
-void SigDemo::gussian(int reduce)
-{
-      buffer = fastSmooth(buffer,reduce);
-      buffer = fastSmooth(buffer,reduce);
-      buffer = fastSmooth(buffer,reduce);
-}
-vector<double> SigDemo::fastSmooth(vector<double> input , int width)
-{
-    int SumPoints = width * (width +1);
-    vector<double> s (input.size(),0);
-    int halfw = width/2;
-    int L= input.size();
-    for (int k = 1 ; k <= L- width;k++)
-    {
-        s[k+halfw-1] = SumPoints;
-        SumPoints = SumPoints - input[k];
-        SumPoints = SumPoints + input[k+width];
-    }
-    int sum = 0;
-    for (int i = L - width+1 ;i < L ;i++ )
-    {
-        sum += input[i];
-    }
-    s[L- width + halfw]= sum;
 
-    for (int i = 0 ;i < s.size() ;i++)
-    {
-        s[i] /= width;
-    }
-    return s;
-}
-//---------------------------------Geometry Functions----------------------------------
-double SigDemo::getShib(double point1,double point2)
-{
-    return atan(point2 - point1);
-}
-double SigDemo::getShib(vector<double> fbuffer)
-{
-    double s = 0;
-    for(int i = 1;i<fbuffer.size();i++)
-    {
-        s += getShib(fbuffer[i-1],fbuffer[i]);
-    }
-    s /= fbuffer.size() -1;
-    return s;
-}
+
+
+
+
+
 
 
 

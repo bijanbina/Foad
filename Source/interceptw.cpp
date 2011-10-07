@@ -87,7 +87,7 @@ void InterceptW::plot(double *Signal,double *Detect ,int size)
 void InterceptW::qCurve()
 {
     double x[localInfo.size()], y[localInfo.size()];
-    q_curves = new QwtPlotCurve;
+    q_curves = new QwtPlotCurve(trUtf8("Q"));
     for (int i = 0 ; i < localInfo.size(); i++)
     {
         int M = localInfo[i].q.detect + localInfo[i].start - TRAiNTIME;
@@ -96,7 +96,7 @@ void InterceptW::qCurve()
             M = localInfo[i].qs.detect + localInfo[i].start;
         }
         //Calculate Q place
-        x[i] = M / 200.0;
+        x[i] = M / SAMPLE_RATE;
         y[i] = Signal[M + TRAiNTIME];
     }
     //-------------- Add Symbol -------------------
@@ -117,12 +117,12 @@ void InterceptW::rCurve()
     double x[localInfo.size()], y[localInfo.size()];
     if(localInfo[0].r.detect!=-1)
     {
-        r_curves = new QwtPlotCurve;
+        r_curves = new QwtPlotCurve(trUtf8("R"));
         for (int i = 0 ; i < localInfo.size(); i++)
         {
             int M = localInfo[i].r.detect + localInfo[i].start - TRAiNTIME;
             //Calculate R place
-            x[i] = M / 200.0;
+            x[i] = M / SAMPLE_RATE;
             y[i] = Signal[M + TRAiNTIME];
         }
         //-------------- Add Symbol -------------------
@@ -142,7 +142,7 @@ void InterceptW::rCurve()
 void InterceptW::sCurve()
 {
     double x[localInfo.size()], y[localInfo.size()];
-    s_curves = new QwtPlotCurve;
+    s_curves = new QwtPlotCurve(trUtf8("S"));
     for (int i = 0 ; i < localInfo.size(); i++)
     {
         int M = localInfo[i].s.detect + localInfo[i].start - TRAiNTIME;
@@ -151,7 +151,7 @@ void InterceptW::sCurve()
             M = localInfo[i].qs.detect + localInfo[i].start;
         }
         //Calculate S place
-        x[i] = M / 200.0;
+        x[i] = M / SAMPLE_RATE;
         y[i] = Signal[M + TRAiNTIME];
     }
     //-------------- Add Symbol -------------------
@@ -210,6 +210,8 @@ InterceptW::InterceptW(QWidget *parent) :QWidget(parent)
     interceptPlot->setTitle(trUtf8("Intercept Plot"));
     myPlot       ->canvas()->setFrameStyle(0);
     interceptPlot->canvas()->setFrameStyle(0);
+    myPlot       ->insertLegend(new QwtLegend(), QwtPlot::RightLegend);
+    interceptPlot->insertLegend(new QwtLegend(), QwtPlot::RightLegend);
 
     interceptPlot->setAxisTitle(myPlot->xBottom, trUtf8("Time (s)"));
     interceptPlot->setAxisTitle(myPlot->yLeft, trUtf8("Voltage (mV)"));
@@ -471,6 +473,49 @@ void InterceptW::Detection_Click()
     Intercept(Signal,true,true);
     update_info();
 }
+//! run when click on start demo in menu
+void InterceptW::Demo_click()
+{
+    if (!sigReader.open(SigRecord))
+        return;
+    if (!sigReader.read(SigTime))
+        return;
+    Signal = sigReader.getSignal();
+    //Check Signal
+    if(Signal.size() < 1)
+    {
+        Warning(trUtf8("Signal is not correct"));
+        return;
+    }
+    //----------------------Variable------------------------
+    localInfo = vector<Ekg_Data> ();
+    int BufferSize = Signal.size();
+    double signal[BufferSize],detected[BufferSize];
+    vector<EkgComplex> Sig_Arr;
+    //-------------------Copy Signal---------------------
+    for(int i = 0 ; i < BufferSize ; i++)
+        signal[i] = Signal[i];
+    //------------------R Detection Start-------------------
+    QRSDet localQRSD = QRSDet(Signal);
+    vector<double> Detected = localQRSD.getDetected();
+    for(int i = 0;i<Detected.size();i++)
+        detected[i] = Detected[i];
+    //---------------------Create Complex------------------
+    Sig_Arr = localQRSD.getComplex();
+    if (Sig_Arr.size() < 1)
+        return;
+    //---------------------Intercept EKG--------------------
+    int ComplexID = 1;
+    //------------------- Get Feuture -----------------------
+    vector<double> Complex = vector<double> (Sig_Arr[1].end - Sig_Arr[1].start);//Signal Buffer for Detection
+    for (int j = Sig_Arr[1].start ; j < Sig_Arr[1].end ; j++)
+    {
+        Complex[j - Sig_Arr[1].start] = signal[j];
+    }
+    plot(signal,detected,BufferSize);
+    DemoWidget = new SigDemo(Complex ,interceptPlot,ComplexID, EKG_age,Sig_Arr[ComplexID].start);
+}
+
 /*--------------------------------------------------------------------------------------------
 |                                   Menu And Dialog                                          |
 ---------------------------------------------------------------------------------------------*/

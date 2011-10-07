@@ -146,7 +146,7 @@ r_feature::r_feature(vector<Ekg_Data> input )
         }
         if (Qduration[i] != NOTDETECTED && sigInfo[i].qs.detect == NOTDETECTED )
         {
-            if (Qduration[i]/200 > 0.04 || abs(Qamp[i]) > Ramp[i]/3)
+            if (Qduration[i]/SAMPLE_RATE > 0.04 || abs(Qamp[i]) > Ramp[i]/3)
                 Q_pathologic[i]=Qduration[i];
             else
                 Q_pathologic[i]=NOTDETECTED;
