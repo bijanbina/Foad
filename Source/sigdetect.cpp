@@ -13,15 +13,15 @@ SigDetect::SigDetect(vector<double> signal , bool getPlot , QwtPlot *plotwidget 
     InitalizeData.voltage = NOTDETECTED;
     InitalizeData.width   = NOTDETECTED;
 
-    sigInfo.qs    = InitalizeData;
-    sigInfo.p     = vector<QFeuture> (0);
-    sigInfo.q     = InitalizeData;
-    sigInfo.r     = InitalizeData;
-    sigInfo.s     = InitalizeData;
-    sigInfo.t     = InitalizeData;
-    sigInfo.u     = InitalizeData;
-    sigInfo.delta = InitalizeData;
-    sigInfo.age   = EKG_Age;
+    sigInfo.qs     = InitalizeData;
+    sigInfo.p      = vector<QFeuture> (0);
+    sigInfo.q      = InitalizeData;
+    sigInfo.r      = InitalizeData;
+    sigInfo.s      = InitalizeData;
+    sigInfo.t      = InitalizeData;
+    sigInfo.u      = InitalizeData;
+    sigInfo.delta  = InitalizeData;
+    sigInfo.age    = EKG_Age;
     sigInfo.Pcount = 0;
     sigInfo.RR     = MainSig.size();
     sigInfo.start  = start;
@@ -98,7 +98,7 @@ SigDetect::SigDetect(vector<double> signal , bool getPlot , QwtPlot *plotwidget 
     if(getPlot)
     {
         myPlot = plotwidget;
-        EKG_Grid = new QwtPlotGrid();
+      //prepare_curve(u_curves);
         QString strID ;
         strID.setNum(id);
         myPlot->setTitle(strID);
@@ -109,7 +109,29 @@ SigDetect::SigDetect(vector<double> signal , bool getPlot , QwtPlot *plotwidget 
         plot(MainSig);
     }
 }
-//! Create plot for signal first convert it to double array
+//! prepare plot widget and related widget
+void SigDetect::prepare_plot()
+{
+    EKG_Grid      = new QwtPlotGrid (           );
+    p_curves      = new QwtPlotCurve(trUtf8("P Wave"));
+    q_curves      = new QwtPlotCurve(trUtf8("Q Wave"));
+    r_curves      = new QwtPlotCurve(trUtf8("R Wave"));
+    s_curves      = new QwtPlotCurve(trUtf8("S Wave"));
+    t_curves      = new QwtPlotCurve(trUtf8("T Wave"));
+    u_curves      = new QwtPlotCurve(trUtf8("U Wave"));
+    pBold_curves  = new QwtPlotCurve(trUtf8("P Complex"));
+    tBold_curves  = new QwtPlotCurve(trUtf8("T Complex"));
+    Signal_curves = new QwtPlotCurve(trUtf8("Signal"));
+    Signal_curves->attach(myPlot);
+    prepare_curve(p_curves,QColor(Qt::magenta));
+    prepare_curve(q_curves,QColor(Qt::yellow));
+    prepare_curve(r_curves,QColor(255,100,20));
+    prepare_curve(s_curves,QColor(Qt::green));
+    prepare_curve(t_curves,QColor(Qt::gray));
+    prepare_curve(pBold_curves,QColor(Qt::red),true);
+    prepare_curve(tBold_curves,QColor(Qt::black),true);
+}
+//! update plot for signal first convert it to double array
 void SigDetect::plot(vector<double> Signal)
 {
     double PSignal[Signal.size()];//Private Signal
@@ -123,7 +145,9 @@ void SigDetect::plot(vector<double> Signal)
 void SigDetect::plot(double *Signal ,int size)
 {
     myPlot->clear();
+    prepare_plot();
     myPlot->plotLayout()->setAlignCanvasToScales(true);
+
     double x[size];
     double s = 0,MaxVal = -999999, MinVal = 999999;
     for(int i = 0 ; i < size ; i++)
@@ -135,50 +159,45 @@ void SigDetect::plot(double *Signal ,int size)
         if (MinVal > Signal[i])
             MinVal = Signal[i];
     }
-    //--------------EKG Grid Line-----------------
-    EKG_Grid->enableXMin(true);
-    EKG_Grid->enableYMin(true);
-    myPlot->setAxisMaxMinor(QwtPlot::xBottom, 5);
-    myPlot->setAxisMaxMajor(QwtPlot::xBottom, s * 10);
-    myPlot->setAxisMaxMinor(QwtPlot::yLeft, 5);
-    myPlot->setAxisMaxMajor(QwtPlot::yLeft, 10);
-    EKG_Grid->setMajPen(QPen(QColor(125,0,0,200), 1, Qt::SolidLine));
-    EKG_Grid->setMinPen(QPen(QColor(125,0,0,60), 0.2, Qt::SolidLine));
-    EKG_Grid->attach(myPlot);
-
-    //--------------- Add Curves ----------------
-    Signal_curves = new QwtPlotCurve(trUtf8("Signal"));
-
-    //--------------- Preparing -----------------
+    //------------------- Preparing --------------------
     zoomer->zoom(0);
     myPlot->setAxisTitle(myPlot->xBottom, trUtf8("Time (s)"));
     myPlot->setAxisTitle(myPlot->yLeft, trUtf8("Voltage (mV)"));
     Signal_curves->setRenderHint(QwtPlotItem::RenderAntialiased);
-
-    // ------copy the data into the curves-----------
+    //-----------------EKG Grid Line--------------------
+    EKG_Grid->enableXMin(true);
+    EKG_Grid->enableYMin(true);
+    EKG_Grid->setMajPen(QPen(QColor(125,0,0,200), 1 , Qt::SolidLine));
+    EKG_Grid->setMinPen(QPen(QColor(125,0,0,60), 0.2, Qt::SolidLine));
+    EKG_Grid->attach(myPlot);
+    myPlot->setAxisMaxMinor(QwtPlot::xBottom, 5);
+    myPlot->setAxisMaxMinor(QwtPlot::yLeft, 5);
+    //---------------- Set Axis Scale-------------------
+    double yStart = -600.0,yEnd = 600.0;
+    if (MaxVal > yEnd)
+        yEnd = MaxVal + 100.0;
+    if (MinVal < yStart)
+        yStart = MinVal - 100.0;
+    int Normal_x = s / 0.2;
+    if ((s - Normal_x * 0.2) < 0.1)
+        Normal_x--;
+    myPlot->setAxisScale(QwtPlot::xBottom, 0.0 , Normal_x * 0.2 + 0.2 ,0.2 );
+    myPlot->setAxisScale(QwtPlot::yLeft, yStart, yEnd , 200);
+    // ---------copy the data into the curves-----------
     Signal_curves->setData(x,Signal,size);
-    //--------------- Attach Curves ----------------
-    Signal_curves->attach(myPlot);
     // ADD Finded Feutures
     qCurve();
     rCurve();
     sCurve();
     pCurve();
     tCurve();
-    //-----------------Set pen-----------------------
+    //--------------------Set pen-----------------------
     QPen *ekgPen = new QPen(Qt::blue);
     ekgPen->setWidthF(0.5);
     ekgPen->setJoinStyle(Qt::RoundJoin);
     ekgPen->setCapStyle(Qt::RoundCap);
     Signal_curves->setPen(*ekgPen);
-    //------------- Set Axis Scale-------------------
-    int yStart = -600,yEnd = 600;
-    if (MaxVal > yEnd)
-        yEnd = MaxVal + 100;
-    if (MinVal < yStart)
-        yStart = MinVal - 100;
-    myPlot->setAxisScale(QwtPlot::xBottom, 0, s/1);
-    myPlot->setAxisScale(QwtPlot::yLeft, yStart, yEnd);
+    //--------------Modify Zoom Settings-----------------
     //zoomer->zoom(0);
     zoomer->setMousePattern(QwtEventPattern::MouseSelect4,Qt::RightButton);
     zoomer->setZoomBase();
@@ -186,7 +205,6 @@ void SigDetect::plot(double *Signal ,int size)
     zoomer->setTrackerPen(QPen(Qt::red));
 
     myPlot->replot();
-
 }
 void SigDetect::ZeroShib()
 {
@@ -857,31 +875,19 @@ void SigDetect::qCurve()
     {
         M = sigInfo.qs.detect;
     }
-    q_curves = new QwtPlotCurve(trUtf8("Q"));
     //Calculate Q place
     double x[1];
     x[0] = M / SAMPLE_RATE;
     //x[0] = M;
     double y[1];
     y[0] = MainSig[M];
-    //-------------- Add Symbol -------------------
-    QwtSymbol sym;
-    sym.setStyle(QwtSymbol::Ellipse);
-    sym.setPen(QColor(Qt::red));
-    sym.setBrush(QColor(Qt::yellow));
-    sym.setSize(8);
-    q_curves->setSymbol(sym);
-    q_curves->setStyle(QwtPlotCurve::NoCurve);
     // ------copy the data into the curves-----------
     q_curves->setData(x,y,1);
-    //--------------- Attach Curves ----------------
-    q_curves->attach(myPlot);
 }
 void SigDetect::rCurve()
 {
     if(sigInfo.r.detect!=-1)
     {
-        r_curves = new QwtPlotCurve(trUtf8("R"));
         int M = sigInfo.r.detect;
         //Calculate R place
         double x[1];
@@ -889,23 +895,12 @@ void SigDetect::rCurve()
         //!x[0] = M;
         double y[1];
         y[0] = MainSig[sigInfo.r.detect];
-        //-------------- Add Symbol -------------------
-        QwtSymbol sym;
-        sym.setStyle(QwtSymbol::Ellipse);
-        sym.setPen(QColor(Qt::red));
-        sym.setBrush(QColor(255,100,20));
-        sym.setSize(8);
-        r_curves->setSymbol(sym);
-        r_curves->setStyle(QwtPlotCurve::NoCurve);
         // ------copy the data into the curves-----------
         r_curves->setData(x,y,1);
-        //--------------- Attach Curves ----------------
-        r_curves->attach(myPlot);
     }
 }
 void SigDetect::sCurve()
 {
-    s_curves = new QwtPlotCurve(trUtf8("S"));
     //Calculate S place
     int M = sigInfo.s.detect;
     if (M == -1)
@@ -917,23 +912,11 @@ void SigDetect::sCurve()
     //x[0] = M;
     double y[1];
     y[0] = MainSig[M];
-    //-------------- Add Symbol -------------------
-    QwtSymbol sym;
-    sym.setStyle(QwtSymbol::Ellipse);
-    sym.setPen(QColor(Qt::red));
-    sym.setBrush(QColor(Qt::green));
-    sym.setSize(8);
-    s_curves->setSymbol(sym);
-    s_curves->setStyle(QwtPlotCurve::NoCurve);
     // ------copy the data into the curves-----------
     s_curves->setData(x,y,1);
-    //--------------- Attach Curves ----------------
-    s_curves->attach(myPlot);
 }
 void SigDetect::pCurve()
 {
-    pBold_curves = new QwtPlotCurve(trUtf8("P Duration"));
-    p_curves = new QwtPlotCurve(trUtf8("P"));
     //Calculate S place
     if (sigInfo.Pcount > 0)
     {
@@ -945,15 +928,6 @@ void SigDetect::pCurve()
             x[k] = sigInfo.p[k].detect / SAMPLE_RATE;
             y[k] = MainSig[sigInfo.p[k].detect];
         }
-
-        //-------------- Add Symbol -------------------
-        QwtSymbol sym;
-        sym.setStyle(QwtSymbol::Ellipse);
-        sym.setPen(QColor(Qt::red));
-        sym.setBrush(QColor(Qt::magenta));
-        sym.setSize(8);
-        p_curves->setSymbol(sym);
-        p_curves->setStyle(QwtPlotCurve::NoCurve);
         //------------ Bold P Duration ----------------
         int size = sigInfo.p[0].end - sigInfo.p[0].start + 1;
         double Xbold[size];
@@ -963,26 +937,14 @@ void SigDetect::pCurve()
             Xbold[i - sigInfo.p[0].start] = i / SAMPLE_RATE;
             Ybold[i - sigInfo.p[0].start] = MainSig[i];
         }
-        //-----------------Set pen-----------------------
-        pBold_curves->setRenderHint(QwtPlotItem::RenderAntialiased);
-        QPen ekgPen = QPen(Qt::red);
-        ekgPen.setWidthF(2);
-        ekgPen.setJoinStyle(Qt::RoundJoin);
-        ekgPen.setCapStyle(Qt::RoundCap);
-        pBold_curves->setPen(ekgPen);
         // ------copy the data into the curves-----------
         p_curves->setData(x,y,1);
         pBold_curves->setData(Xbold,Ybold,size);
-        //--------------- Attach Curves ----------------
-        p_curves->attach(myPlot);
-        pBold_curves->attach(myPlot);
     }
 
 }
 void SigDetect::tCurve()
 {
-    t_curves = new QwtPlotCurve(trUtf8("T"));
-    tBold_curves = new QwtPlotCurve(trUtf8("T Duration"));
     //Calculate T place
     int M = sigInfo.t.detect;
     if (M != -1)
@@ -992,14 +954,6 @@ void SigDetect::tCurve()
         //x[0] = M;
         double y[1];
         y[0] = MainSig[M];
-        //-------------- Add Symbol -------------------
-        QwtSymbol sym;
-        sym.setStyle(QwtSymbol::Ellipse);
-        sym.setPen(QColor(Qt::red));
-        sym.setBrush(QColor(Qt::gray));
-        sym.setSize(8);
-        t_curves->setSymbol(sym);
-        t_curves->setStyle(QwtPlotCurve::NoCurve);
         //------------ Bold T Duration ----------------
         int size = sigInfo.t.end - sigInfo.t.start + 1;
         double Xbold[size];
@@ -1009,20 +963,41 @@ void SigDetect::tCurve()
             Xbold[i - sigInfo.t.start] = i / SAMPLE_RATE;
             Ybold[i - sigInfo.t.start] = MainSig[i];
         }
-        //-----------------Set pen-----------------------
-        tBold_curves->setRenderHint(QwtPlotItem::RenderAntialiased);
-        QPen ekgPen = QPen(Qt::black);
-        ekgPen.setWidthF(2);
-        ekgPen.setJoinStyle(Qt::RoundJoin);
-        ekgPen.setCapStyle(Qt::RoundCap);
-        tBold_curves->setPen(ekgPen);
         // ------copy the data into the curves-----------
         t_curves->setData(x,y,1);
         tBold_curves->setData(Xbold,Ybold,size);
-        //--------------- Attach Curves ----------------
-        t_curves->attach(myPlot);
-        tBold_curves->attach(myPlot);
     }
+}
+/**
+ * prepare generally curves at the construction of the class
+ * @param curve an curve which we want to make it usable.
+ * @param name the curve name that use in the legend.
+ */
+void SigDetect::prepare_curve(QwtPlotCurve *curve,QColor brush,bool bold)
+{
+    if (bold)
+    {
+        //-----------------Set pen-----------------------
+        curve->setRenderHint(QwtPlotItem::RenderAntialiased);
+        QPen ekgPen = QPen(brush);
+        ekgPen.setWidthF(2);
+        ekgPen.setJoinStyle(Qt::RoundJoin);
+        ekgPen.setCapStyle(Qt::RoundCap);
+        curve->setPen(ekgPen);
+    }
+    else
+    {
+        //-------------- Add Symbol -------------------
+        QwtSymbol sym;
+        sym.setStyle(QwtSymbol::Ellipse);
+        sym.setPen(QColor(Qt::red));
+        sym.setBrush(brush);
+        sym.setSize(8);
+        curve->setSymbol(sym);
+        curve->setStyle(QwtPlotCurve::NoCurve);
+    }
+    //--------------- Attach Curves ----------------
+    curve->attach(myPlot);
 }
 //----------------------------------DETECTED Functions-----------------------------------
 void SigDetect::NODetect(double replace)

@@ -36,6 +36,8 @@ You may contact the author by e-mail (bijan@binaee.ir) or postal mail
 #define TIMEREPEAT 60
 #define TRAiNTIME 8 * SAMPLE_RATE
 #define ASKCOMPLEX false
+#define WIDTH  1000
+#define HEIGHT 640
 
 #ifndef QrSDET_INCLUDED
 #define QrSDET_INCLUDED

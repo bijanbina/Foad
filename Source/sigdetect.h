@@ -72,6 +72,8 @@ private:
     void sCurve();
     void pCurve();
     void tCurve();
+    void prepare_curve(QwtPlotCurve *curve,QColor brush,bool bold = false);
+    void prepare_plot();
     //Signal Data
     vector <double> MainSig;
     vector <double> buffer;

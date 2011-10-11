@@ -14,15 +14,15 @@ SigDemo::SigDemo(vector<double> signal , QwtPlot *plotwidget ,  int id , int EKG
     InitalizeData.voltage = NOTDETECTED;
     InitalizeData.width   = NOTDETECTED;
 
-    sigInfo.qs    = InitalizeData;
-    sigInfo.p     = vector<QFeuture> (0);
-    sigInfo.q     = InitalizeData;
-    sigInfo.r     = InitalizeData;
-    sigInfo.s     = InitalizeData;
-    sigInfo.t     = InitalizeData;
-    sigInfo.u     = InitalizeData;
-    sigInfo.delta = InitalizeData;
-    sigInfo.age   = EKG_Age;
+    sigInfo.qs     = InitalizeData;
+    sigInfo.p      = vector<QFeuture> (0);
+    sigInfo.q      = InitalizeData;
+    sigInfo.r      = InitalizeData;
+    sigInfo.s      = InitalizeData;
+    sigInfo.t      = InitalizeData;
+    sigInfo.u      = InitalizeData;
+    sigInfo.delta  = InitalizeData;
+    sigInfo.age    = EKG_Age;
     sigInfo.Pcount = 0;
     sigInfo.RR     = MainSig.size();
     sigInfo.start  = start_sig;
@@ -115,10 +115,60 @@ SigDemo::SigDemo(vector<double> signal , QwtPlot *plotwidget ,  int id , int EKG
     }
      else
         sigInfo.NSR = false;
-
-//Copy to double array
-
-    //plot(MainSig);
+}
+//! prepare plot widget and related widget
+void SigDemo::prepare_plot()
+{
+    EKG_Grid      = new QwtPlotGrid (           );
+    p_curves      = new QwtPlotCurve(trUtf8("P Wave"));
+    q_curves      = new QwtPlotCurve(trUtf8("Q Wave"));
+    r_curves      = new QwtPlotCurve(trUtf8("R Wave"));
+    s_curves      = new QwtPlotCurve(trUtf8("S Wave"));
+    t_curves      = new QwtPlotCurve(trUtf8("T Wave"));
+    u_curves      = new QwtPlotCurve(trUtf8("U Wave"));
+    pBold_curves  = new QwtPlotCurve(trUtf8("P Complex"));
+    tBold_curves  = new QwtPlotCurve(trUtf8("T Complex"));
+    Signal_curves = new QwtPlotCurve(trUtf8("Signal"));
+    Signal_curves->attach(myPlot);
+    prepare_curve(p_curves,QColor(Qt::magenta));
+    prepare_curve(q_curves,QColor(Qt::yellow));
+    prepare_curve(r_curves,QColor(255,100,20));
+    prepare_curve(s_curves,QColor(Qt::green));
+    prepare_curve(t_curves,QColor(Qt::gray));
+    prepare_curve(pBold_curves,QColor(Qt::red),true);
+    prepare_curve(tBold_curves,QColor(Qt::black),true);
+    newMark(trUtf8("Demo"));
+}
+/**
+ * prepare generally curves at the construction of the class
+ * @param curve an curve which we want to make it usable.
+ * @param name the curve name that use in the legend.
+ */
+void SigDemo::prepare_curve(QwtPlotCurve *curve,QColor brush,bool bold)
+{
+    if (bold)
+    {
+        //-----------------Set pen-----------------------
+        curve->setRenderHint(QwtPlotItem::RenderAntialiased);
+        QPen ekgPen = QPen(brush);
+        ekgPen.setWidthF(2);
+        ekgPen.setJoinStyle(Qt::RoundJoin);
+        ekgPen.setCapStyle(Qt::RoundCap);
+        curve->setPen(ekgPen);
+    }
+    else
+    {
+        //-------------- Add Symbol -------------------
+        QwtSymbol sym;
+        sym.setStyle(QwtSymbol::Ellipse);
+        sym.setPen(QColor(Qt::red));
+        sym.setBrush(brush);
+        sym.setSize(8);
+        curve->setSymbol(sym);
+        curve->setStyle(QwtPlotCurve::NoCurve);
+    }
+    //--------------- Attach Curves ----------------
+    curve->attach(myPlot);
 }
 //! Create plot for signal first convert it to double array
 void SigDemo::plot(vector<double> Signal)
@@ -140,7 +190,11 @@ void SigDemo::updatePlot(vector<double> Signal)
     }
     updatePlot(PSignal,Signal.size());
 }
-
+/**
+ * use to create new mark curve
+ * @param name it's curve name that use in the legend of plot
+ * \sa    updatePlot(double *Signal ,int size)
+ */
 void SigDemo::updatePlot(double *Signal ,int size)
 {
     double x[size];
@@ -152,12 +206,6 @@ void SigDemo::updatePlot(double *Signal ,int size)
     }
     // ------copy the data into the curves-----------
     Signal_curves->setData(x,Signal,size);
-    //-----------------Set pen-----------------------
-    QPen *ekgPen = new QPen(Qt::blue);
-    ekgPen->setWidthF(0.5);
-    ekgPen->setJoinStyle(Qt::RoundJoin);
-    ekgPen->setCapStyle(Qt::RoundCap);
-    Signal_curves->setPen(*ekgPen);
 
     myPlot->replot();
 }
@@ -165,6 +213,7 @@ void SigDemo::updatePlot(double *Signal ,int size)
 void SigDemo::plot(double *Signal ,int size)
 {
     myPlot->clear();
+    prepare_plot();
     myPlot->plotLayout()->setAlignCanvasToScales(true);
     XSignal = new double[size];
     double s = 0,MaxVal = -999999, MinVal = 999999;
@@ -177,28 +226,32 @@ void SigDemo::plot(double *Signal ,int size)
         if (MinVal > Signal[i])
             MinVal = Signal[i];
     }
-    //--------------EKG Grid Line-----------------
-    EKG_Grid->enableXMin(true);
-    EKG_Grid->enableYMin(true);
-    myPlot->setAxisMaxMinor(QwtPlot::xBottom, 5);
-    myPlot->setAxisMaxMajor(QwtPlot::xBottom, s * 10);
-    myPlot->setAxisMaxMinor(QwtPlot::yLeft, 5);
-    myPlot->setAxisMaxMajor(QwtPlot::yLeft, 10);
-    EKG_Grid->setMajPen(QPen(QColor(125,0,0,200), 1, Qt::SolidLine));
-    EKG_Grid->setMinPen(QPen(QColor(125,0,0,60), 0.2, Qt::SolidLine));
-    EKG_Grid->attach(myPlot);
-
-    //--------------- Add Curves ----------------
-    Signal_curves = new QwtPlotCurve(trUtf8("Signal"));
-
-    //--------------- Preparing -----------------
+    //------------------- Preparing --------------------
+    zoomer->zoom(0);
     myPlot->setAxisTitle(myPlot->xBottom, trUtf8("Time (s)"));
     myPlot->setAxisTitle(myPlot->yLeft, trUtf8("Voltage (mV)"));
     Signal_curves->setRenderHint(QwtPlotItem::RenderAntialiased);
-    // ------copy the data into the curves-----------
+    //-----------------EKG Grid Line--------------------
+    EKG_Grid->enableXMin(true);
+    EKG_Grid->enableYMin(true);
+    EKG_Grid->setMajPen(QPen(QColor(125,0,0,200), 1 , Qt::SolidLine));
+    EKG_Grid->setMinPen(QPen(QColor(125,0,0,60), 0.2, Qt::SolidLine));
+    EKG_Grid->attach(myPlot);
+    myPlot->setAxisMaxMinor(QwtPlot::xBottom, 5);
+    myPlot->setAxisMaxMinor(QwtPlot::yLeft, 5);
+    //---------------- Set Axis Scale-------------------
+    double yStart = -600.0,yEnd = 600.0;
+    if (MaxVal > yEnd)
+        yEnd = MaxVal + 100.0;
+    if (MinVal < yStart)
+        yStart = MinVal - 100.0;
+    int Normal_x = s / 0.2;
+    if ((s - Normal_x * 0.2) < 0.1)//round the signal time with precision 0.2
+        Normal_x--;
+    myPlot->setAxisScale(QwtPlot::xBottom, 0.0 , Normal_x * 0.2 + 0.2 ,0.2 );
+    myPlot->setAxisScale(QwtPlot::yLeft, yStart, yEnd , 200);
+    // ---------copy the data into the curves-----------
     Signal_curves->setData(XSignal,Signal,size);
-    //--------------- Attach Curves ----------------
-    Signal_curves->attach(myPlot);
     // ADD Finded Feutures
     //qCurve();
     //rCurve();
@@ -211,14 +264,7 @@ void SigDemo::plot(double *Signal ,int size)
     ekgPen->setJoinStyle(Qt::RoundJoin);
     ekgPen->setCapStyle(Qt::RoundCap);
     Signal_curves->setPen(*ekgPen);
-    //------------- Set Axis Scale-------------------
-    int yStart = -600,yEnd = 600;
-    if (MaxVal > yEnd)
-        yEnd = MaxVal + 100;
-    if (MinVal < yStart)
-        yStart = MinVal - 100;
-    myPlot->setAxisScale(QwtPlot::xBottom, 0, s/1);
-    myPlot->setAxisScale(QwtPlot::yLeft, yStart, yEnd);
+    //--------------Modify Zoom Settings-----------------
     //zoomer->zoom(0);
     zoomer->setMousePattern(QwtEventPattern::MouseSelect4,Qt::RightButton);
     zoomer->setZoomBase();
@@ -274,7 +320,7 @@ double SigDemo::getVariance(vector<double> fbuffer)
 //!  use to mark a point in plot this point have x index y of MainSig[index]
 void SigDemo::mark(int index)
 {
-    //Calculate time of index and add it to mark list;
+    //Calculate time of index and add it to mark list
     mark_temp_x.push_back( index / SAMPLE_RATE );
     mark_temp_y.push_back( MainSig[index] );
     //Create an array from vector
@@ -285,17 +331,58 @@ void SigDemo::mark(int index)
         mark_x[i] = mark_temp_x[i];
         mark_y[i] = mark_temp_y[i];
     }
+    // -----------update curves data----------------
+    mark_curves->setData(mark_x,mark_y,mark_temp_x.size());
+    myPlot->replot();
+}
+/**
+ * use to create new mark curve
+ * @param name it's curve name that use in the legend of plot
+ */
+void SigDemo::newMark(QString name)
+{
+    mark_curves = new QwtPlotCurve(name);
     //--------------- Add Symbol -------------------
     QwtSymbol sym;
     sym.setStyle(QwtSymbol::Ellipse);
     sym.setPen(QColor(rand() % 255,rand() % 255,rand() % 255));
     sym.setBrush(QColor(255,100,20));
     sym.setSize(8);
-    r_curves->setSymbol(sym);
-    // -----------update curves data----------------
-    r_curves->setData(mark_x,mark_y,mark_temp_x.size());
-    //--------------- Attach Curves ----------------
+    mark_curves->setSymbol(sym);
+    //
     mark_curves->attach(myPlot);
+}
+/**
+ * use to delete an index from mark buffer
+ * @param index x value of signal.
+ */
+void SigDemo::disMark(int index)
+{
+    //Calculate array index from signal index
+    int k = -1;
+    for (int i = 0;i<mark_temp_x.size();i++)
+    {
+        if (mark_temp_x[i] == index)
+        {
+            k = i;
+        }
+    }
+    if (k < 0)
+        return;//not marked value
+    //Delete from bouth buffer
+    mark_temp_x.erase(mark_temp_x.begin()+k);
+    mark_temp_y.erase(mark_temp_x.begin()+k);
+    //Update plot
+    double mark_x[mark_temp_x.size()];
+    double mark_y[mark_temp_x.size()];
+    for (int i = 0;i<mark_temp_x.size();i++)
+    {
+        mark_x[i] = mark_temp_x[i];
+        mark_y[i] = mark_temp_y[i];
+    }
+    // -----------update curves data----------------
+    mark_curves->setData(mark_x,mark_y,mark_temp_x.size());
+    myPlot->replot();
 }
 
 void SigDemo::qCurve()

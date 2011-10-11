@@ -2,11 +2,6 @@
 #define EKGWINDOW_H
 
 #include "interceptw.h"
-#define TIMEREPEAT 60
-#define TRAiNTIME 8 * SAMPLE_RATE
-#define WIDTH 900
-#define HEIGHT 640
-#define ASKCOMPLEX false
 
 class EKGWindow : public QMainWindow
 {
