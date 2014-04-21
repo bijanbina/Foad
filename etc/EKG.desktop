@@ -1,0 +1,20 @@
+[Desktop Entry]
+Categories=Education;
+Comment[en_US]=Software for detecting problem of ekg
+Comment=Software for detecting problem of ekg
+Exec=/home/bijan/Project/EKG/EKG
+GenericName[en_US]=
+GenericName=
+Icon="/home/bijan/Project/EKG/Image/icon.png"
+MimeType=
+Name[en_US]=EKG
+Name=EKG
+Path=
+StartupNotify=true
+Terminal=false
+TerminalOptions=
+Type=Application
+X-DBUS-ServiceName=
+X-DBUS-StartupType=
+X-KDE-SubstituteUID=false
+X-KDE-Username=
